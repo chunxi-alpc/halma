@@ -1,9 +1,11 @@
-from pygame import*
+import pygame 
 import sys
 from math import *
-import win32api,win32con
 import itertools
+import random
+pygame.font.init()
 
+font = pygame.font.SysFont("Arial", 50)
 role='blue'
 def role_change():
     global role
@@ -67,25 +69,41 @@ flag=[[-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2],
 [-2, -2, -2, -2, -2, -2, -1, -2, -1, -2, -2, -2, -2, -2, -2],
 [-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2]]
 
+weight=[[-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2],
+[-2, -2, -2, -2, -2, -2, -1, -2, -1, -2, -2, -2, -2, -2, -2],
+[-2, -2, -2, -2, -2, -1, -2, -1, -2, -1, -2, -2, -2, -2, -2],
+[-2, -2, -2, -2, -1, -2, -1, -2, -1, -2, -1, -2, -2, -2, -2],
+[-2, -2, -2,4, -2, -1, -2, -1, -2, -1, -2, 11, -2, -2, -2],
+[-2, -2, 5, -2, -1, -2, -1, -2, -1, -2, -1, -2, 17, -2, -2],
+[-2, 9, -2, 3, -2, -1, -2, -1, -2, -1, -2, 12, -2, 18, -2],
+[0, -2, 6, -2, -1, -2, -1, -2, -1, -2, -1, -2, 16, -2, 10],
+[-2, 8, -2, 2, -2, -1, -2, -1, -2, -1, -2, 13, -2, 19, -2],
+[-2, -2, 7, -2, -1, -2, -1, -2, -1, -2, -1, -2, 15, -2, -2],
+[-2, -2, -2, 1, -2, -1, -2, -1, -2, -1, -2, 14, -2, -2, -2],
+[-2, -2, -2, -2, -1, -2, -1, -2, -1, -2, -1, -2, -2, -2, -2],
+[-2, -2, -2, -2, -2, -1, -2, -1, -2, -1, -2, -2, -2, -2, -2],
+[-2, -2, -2, -2, -2, -2, -1, -2, -1, -2, -2, -2, -2, -2, -2],
+[-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2]]
+
 b=[]
 r=[]
-init()
+pygame.init()
 size = width, height = 860, 750  # 设置窗口大小
-screen = display.set_mode(size)  # 显示窗口
-select_image = image.load("./image/select.png").convert_alpha()
-background = image.load('./image/board.png')
+screen = pygame.display.set_mode(size)  # 显示窗口
+select_image = pygame.image.load("./image/select.png").convert_alpha()
+background = pygame.image.load('./image/board.png')
 for i in range(10):
-    b.append(image.load('./image/蓝棋'+str(i)+'.png'))
+    b.append(pygame.image.load('./image/蓝棋'+str(i)+'.png'))
 for i in range(10):
-    r.append(image.load('./image/红棋'+str(i)+'.png'))
+    r.append(pygame.image.load('./image/红棋'+str(i)+'.png'))
 area=b[0].get_rect()
-net_mode_image = image.load("./image/net_mode.png").convert_alpha()
-ai_mode_image = image.load("./image/ai_mode.png").convert_alpha()
-repent_image = image.load("./image/repent.png").convert_alpha()
-restart_image = image.load("./image/restart.png").convert_alpha()
-quit_image = image.load("./image/quit.png").convert_alpha()
-sound_background = mixer.Sound("./sound/background.wav")
-sound_move = mixer.Sound("./sound/move.wav")
+net_mode_image = pygame.image.load("./image/net_mode.png").convert_alpha()
+ai_mode_image = pygame.image.load("./image/ai_mode.png").convert_alpha()
+repent_image = pygame.image.load("./image/repent.png").convert_alpha()
+restart_image =pygame.image.load("./image/restart.png").convert_alpha()
+quit_image = pygame.image.load("./image/quit.png").convert_alpha()
+sound_background = pygame.mixer.Sound("./sound/background.wav")
+sound_move = pygame.mixer.Sound("./sound/move.wav")
 area= background.get_rect()  # 获取矩形区域
 def draw():
     global chess_pos
@@ -94,7 +112,7 @@ def draw():
     screen.blit(background, area)
     if select_chess !=None:
         screen.blit(select_image,chess_pos[select_chess[0]][select_chess[1]])
-    display.set_caption("国际跳棋")
+    pygame.display.set_caption("国际跳棋")
     #棋子初始坐标
     dd=160
     ss=28
@@ -254,21 +272,23 @@ def removable(x,y,select_chess):
                         return i,j
     return None
 
+pre_space=None
+pre_chess=None
 
 if __name__ == '__main__':
-    firsttime = 1
+    
     draw()
     while True:  # 死循环确保窗口一直显示
-        for e in event.get():  # 遍历所有事件
-            if e.type == QUIT:  # 如果单击关闭窗口，则退出
+        for e in pygame.event.get():  # 遍历所有事件
+            if e.type == pygame.QUIT:  # 如果单击关闭窗口，则退出
                 sys.exit()
             # 按Esc则退出游戏
-            if e.type == KEYDOWN:
+            if e.type == pygame.KEYDOWN:
                 if e.key == K_ESCAPE:
                     sys.exit()
                     
-            if e.type == MOUSEBUTTONDOWN:
-                x,y = mouse.get_pos()
+            if e.type == pygame.MOUSEBUTTONDOWN:
+                x,y = pygame.mouse.get_pos()
                 selected = is_chess_clicked(x,y)
                 if selected is not None:
                         print('本次点击点击到了棋子')
@@ -284,6 +304,8 @@ if __name__ == '__main__':
                         ii,jj=select_chess
                         flag[i][j]=flag[ii][jj]
                         flag[ii][jj]=-1
+                        pre_space=selected
+                        pre_chess=select_chess
                         selected=None
                         select_chess = None
                         role_change()
@@ -301,15 +323,46 @@ if __name__ == '__main__':
                            # local()
                     elif x in range(ss+dd*2,ss+dd*2+xx) and y in range(h,h+yy) :
                         print('悔棋')
+                        if pre_chess!=None:
+                            ii,jj=pre_space
+                            i,j=pre_chess
+                            flag[i][j]=flag[ii][jj]
+                            flag[ii][jj]=-1
+                            role_change()
+                            pre_chess=None
                     elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
                         print('重新开始')
                     elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) :
-                        print('游戏结束')
+                        print('算分叫停')
+                        blue_sum=0
+                        for i in range(11,15):
+                            for j in range(4,11):
+                                if flag[j][i]>0 and flag[j][i]<10:
+                                    blue_sum+=(weight[j][i]-10)*flag[j][i]
+                                    print(weight[j][i],flag[j][i])
+                        red_sum=0
+                        cnt=0
+                        for i in range(0,4):
+                            for j in range(4,11):
+                                if flag[j][i]>-2:
+                                    cnt+=1
+                                if flag[j][i]>9 :
+                                    red_sum+=weight[j][i]*(flag[j][i]-10)
+                                    print(weight[j][i],flag[j][i])
+                        print(blue_sum)
+                        print(red_sum)
+                        
+                        final_text2 = "Blue final score is:  " + str(blue_sum)
+                        final_text1 = "Red final score is:  " + str(red_sum)
+                        font = pygame.font.SysFont("Arial", 30)
+                        ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
+                        ft2_surf = font.render(final_text2, 1, (65,105,225))                            
+                        screen.blit(ft2_surf, (20,700))  
+                        screen.blit(ft1_surf, (500,700))  
+                        pygame.display.flip()                                                            # 更新整个待显示的Surface对象到屏幕上
+                        sys.exit()
             draw()
-            display.flip()  # 更新全部显示
-            if firsttime == 1:
-                firsttime = 0
-                win32api.MessageBox(0, "石头剪刀布，谁赢谁先出！", "提示",win32con.MB_OK)
-
+            pygame.display.flip()  # 更新全部显示
+            
     quit()  # 退出pygame
 
