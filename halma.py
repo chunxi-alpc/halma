@@ -2,6 +2,8 @@ from pygame import*
 import sys
 from math import *
 import win32api,win32con
+import itertools
+
 role='blue'
 def role_change():
     global role
@@ -128,42 +130,128 @@ def is_chess_clicked(x,y):
 def removable(x,y,select_chess):
     global chess_pos
     global flag
-    
+    global role
     d=54
-    dd=170
+    
+    #dd=170
     #被移动棋子的坐标
     xx,yy=select_chess
-    print(x,y)
-    print((x-chess_pos[xx][yy][0])*(x-chess_pos[xx][yy][0])+(y-chess_pos[xx][yy][1])*(y-chess_pos[xx][yy][1]))
-    print(dd*dd)
-    print(select_chess)
-    if (x-chess_pos[xx][yy][0])*(x-chess_pos[xx][yy][0])+(y-chess_pos[xx][yy][1])*(y-chess_pos[xx][yy][1])>dd*dd:
-        return None
+   # if (x-chess_pos[xx][yy][0])*(x-chess_pos[xx][yy][0])+(y-chess_pos[xx][yy][1])*(y-chess_pos[xx][yy][1])>dd*dd:
+     #   return None
     
     #移
     dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
     for xy in dxy:
         i=xy[0]
         j=xy[1]
-        if flag[i][j]==-1:
-            if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
-                return i,j
-    #邻
-    for xy in dxy:
-        
-        i=xy[0]
-        j=xy[1]
-        if flag[i][j]>-1:
-            print(i,j)
-            dx=i-xx
-            dy=j-yy
-            i=dx+i
-            j=dy+j
-            print(i,j)
+        if i>=0 and i<=14 and j>=0 and j<=14:
             if flag[i][j]==-1:
                 if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
                     return i,j
-            
+    #邻
+    for xy in dxy:
+        i=xy[0]
+        j=xy[1]
+        if i>=0 and i<=14 and j>=0 and j<=14:
+            if flag[i][j]>-1:
+                dx=i-xx
+                dy=j-yy
+                i=dx+i
+                j=dy+j
+                if i>=0 and i<=14 and j>=0 and j<=14:
+                    if flag[i][j]==-1:
+                        if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
+                            return i,j
+
+    #单跨
+    for i in range(15):
+        for j in range(15):
+            if flag[i][j]==-1:
+                if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
+                #选择到一个空格
+                    num=[]
+                    #左斜
+                    if i+j==xx+yy:
+                        if i>xx:
+                            ii=i-1
+                            jj=j+1
+                        else:
+                            ii=i+1
+                            jj=j-1
+                        if flag[ii][jj]>-1:
+                            for iii in range(min(i,xx),max(i,xx)+1):
+                                for jjj in range(min(j,yy),max(j,yy)+1):
+                                    if flag[iii][jjj]>-1 and iii+jjj==xx+yy:
+                                        num.append(flag[iii][jjj])               
+                    #右斜 
+                    elif i-j==xx-yy:
+                        if i>xx:
+                            ii=i-1
+                            jj=j-1
+                        else:
+                            ii=i+1
+                            jj=j+1
+                        if flag[ii][jj]>-1:
+                            for iii in range(min(i,xx),max(i,xx)+1):
+                                for jjj in range(min(j,yy),max(j,yy)+1):
+                                    if flag[iii][jjj]>-1 and iii-jjj==xx-yy:
+                                        num.append(flag[iii][jjj])     
+                    #竖直
+                    elif j==yy:
+                        if i>xx:
+                            ii=i-2
+                            jj=j
+                        else:
+                            ii=i+2
+                            jj=j
+                        if flag[ii][jj]>-1 and ii>=0 and ii<=14 and jj>=0 and jj<=14:
+                            for iii in range(min(i,xx),max(i,xx)+1,2):
+                                num.append(flag[iii][j])     
+                    else:
+                        break
+                    if num==[]:
+                        break
+                    if flag[xx][yy] in num:
+                        num.remove(flag[xx][yy])
+                    #确保空格旁边有棋子
+
+                    num_len=len(num)
+                    for each in range(num_len):
+                        if num[each]>9:
+                            num[each]=num[each]-10
+                    num_list=[[] for i in range(num_len)]
+                    print(num)
+                    num_list[num_len-1]=list(itertools.permutations(num,num_len))
+                    while num_len>1:
+                        print(num_list)
+                        for e in range(len(num_list[num_len-1])):
+                            num1=num_list[num_len-1][e][0]
+                            num2=num_list[num_len-1][e][1]
+                            next_list=num_list[num_len-1][e][2:]
+                            next_list=next_list+(num1+num2,)
+                            num_list[num_len-2].append(next_list)
+                            
+                            next_list=num_list[num_len-1][e][2:]
+                            next_list=next_list+(num1-num2,)
+                            num_list[num_len-2].append(next_list)
+                            
+                            next_list=num_list[num_len-1][e][2:]
+                            next_list=next_list+(num1*num2,)
+                            num_list[num_len-2].append(next_list)
+
+                            if num2!=0:
+                                next_list=num_list[num_len-1][e][2:]
+                                next_list=next_list+(num1//num2,)
+                                num_list[num_len-2].append(next_list)
+                            
+                        num_len-=1
+                        tot=len(num_list[num_len-1])
+                        for e in  range(tot):
+                            num_list[num_len-1]+=itertools.permutations(num_list[num_len-1][e],num_len)
+                        num_list[num_len-1]=list(set(num_list[num_len-1]))
+                    print(num_list)
+                    if ((flag[xx][yy],) in num_list[0] and role=='blue') or ((flag[xx][yy]-10,) in num_list[0] and role=='red'):
+                        return i,j
     return None
 
 
