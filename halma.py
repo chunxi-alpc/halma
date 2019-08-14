@@ -6,13 +6,14 @@ import random
 pygame.font.init()
 
 font = pygame.font.SysFont("Arial", 50)
-role='blue'
+
 def role_change():
     global role
     if role=='blue':
         role='red'
     else:
         role='blue'
+role='blue'
 select_chess = None
 selected=None
 chess_pos =[[0]*15 for i in range(15)]
@@ -97,6 +98,9 @@ for i in range(10):
 for i in range(10):
     r.append(pygame.image.load('./image/红棋'+str(i)+'.png'))
 area=b[0].get_rect()
+blue_sign=pygame.image.load("./image/蓝棋.png").convert_alpha()
+red_sign=pygame.image.load("./image/红棋.png").convert_alpha()
+
 net_mode_image = pygame.image.load("./image/net_mode.png").convert_alpha()
 ai_mode_image = pygame.image.load("./image/ai_mode.png").convert_alpha()
 repent_image = pygame.image.load("./image/repent.png").convert_alpha()
@@ -117,6 +121,12 @@ def draw():
     dd=160
     ss=28
     h=145
+    screen.blit(blue_sign, (30,250))
+    screen.blit(red_sign, (130,250))
+    if role=='blue' :
+        screen.blit(select_image,(30,250))
+    else :
+        screen.blit(select_image,(130,250))
     screen.blit(net_mode_image, (ss, h+3))
     screen.blit(ai_mode_image, (ss+dd ,h))
     screen.blit(repent_image, (ss+dd*2, h))
@@ -332,6 +342,12 @@ if __name__ == '__main__':
                             pre_chess=None
                     elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
                         print('重新开始')
+                        role='blue'
+                        select_chess = None
+                        selected=None
+                        re_chess=None
+                        flag=weight
+                        break
                     elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) :
                         print('算分叫停')
                         blue_sum=0
