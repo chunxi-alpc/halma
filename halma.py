@@ -1,9 +1,16 @@
 from pygame import*
 import sys
 from math import *
-
+import win32api,win32con
 role='blue'
-selected=(1000,1000)
+def role_change():
+    global role
+    if role=='blue':
+        role='red'
+    else:
+        role='blue'
+select_chess = None
+selected=None
 chess_pos =[[0]*15 for i in range(15)]
 chess0 =[[] for i in range(8)]
 dd=65
@@ -32,6 +39,7 @@ for j in range(7):
 for i in range(8):
     for j in range(8):
         chess_pos[i+7-j][i+j]=chess0[i][j]
+
 '''
 flag = [[-2]*15 for i in range(15) ]
 for i in range(15):
@@ -56,6 +64,7 @@ flag=[[-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2],
 [-2, -2, -2, -2, -2, -1, -2, -1, -2, -1, -2, -2, -2, -2, -2],
 [-2, -2, -2, -2, -2, -2, -1, -2, -1, -2, -2, -2, -2, -2, -2],
 [-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2]]
+
 b=[]
 r=[]
 init()
@@ -79,9 +88,10 @@ area= background.get_rect()  # 获取矩形区域
 def draw():
     global chess_pos
     global flag
+    global select_chess 
     screen.blit(background, area)
-    if selected != (1000,1000):
-        screen.blit(select_image,chess_pos[selected[0]][selected[1]])
+    if select_chess !=None:
+        screen.blit(select_image,chess_pos[select_chess[0]][select_chess[1]])
     display.set_caption("国际跳棋")
     #棋子初始坐标
     dd=160
@@ -104,6 +114,7 @@ def draw():
 
 def is_chess_clicked(x,y):
     d=54
+    global role
     global chess_pos
     global flag
     for i in range(15):
@@ -121,14 +132,20 @@ def is_space_clicked(x,y,select_chess):
     dd=90
     #被移动棋子的坐标
     xx,yy=select_chess
+    print(select_chess)
     if (x-chess_pos[xx][yy][0])*(x-chess_pos[xx][yy][0])+(y-chess_pos[xx][yy][1])*(y-chess_pos[xx][yy][1])>dd*dd:
         return None
-   
-    dxy=[(xx-1,yy-1),(xx,yy-2),(xx+1,yy-1),(xx-1,yy+1),(xx,yy+2),(xx+1,yy+1)]
+    '''
+    for i in range(15):
+       print(flag[i])
+    '''
+    #dxy=[(xx-1,yy-1),(xx,yy-2),(xx+1,yy-1),(xx-1,yy+1),(xx,yy+2),(xx+1,yy+1)]
+    dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
 
     for xy in dxy:
         i=xy[0]
         j=xy[1]
+        print(i,j)
         if flag[i][j]==-1:
             if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
                 return i,j
@@ -136,8 +153,7 @@ def is_space_clicked(x,y,select_chess):
 
 
 if __name__ == '__main__':
-
-    select_chess = None
+    firsttime = 1
     draw()
     while True:  # 死循环确保窗口一直显示
         for e in event.get():  # 遍历所有事件
@@ -152,48 +168,45 @@ if __name__ == '__main__':
                 x,y = mouse.get_pos()
                 selected = is_chess_clicked(x,y)
                 if selected is not None:
-                        # 本次点击点击到了棋子
+                        print('本次点击点击到了棋子')
                         print(selected)
-                        
                         select_chess=selected
-                else:
+                        selected=None
+                elif select_chess != None:
                     selected=is_space_clicked(x,y,select_chess)
-    
                     if selected is not None:
-                        # 本次点击点击到了可移动的空格
+                        print('本次点击点击到了可移动的空格')
+                        print(selected)
                         i,j=selected
                         ii,jj=select_chess
-                        print(i,j,ii,jj)
-                        if(role=='blue'):
-                            flag[i][j]=flag[ii][jj]
-                            flag[ii][jj]=-1
-                            '''
-                            tmp=chess_pos[i][j]
-                            chess_pos[i][j]=chess_pos[ii][jj]
-                            chess_pos[ii][jj]=tmp
-                            '''
-                            select_chess = None
-                    else:
-                        dd=160
-                        ss=28
-                        h=145
-                        xx=150
-                        yy=50
-                        if x in range(ss,ss+xx) and y in range(h+3,h+3+yy) :
-                            print('网络模式')
-                            #net_mode()
-                        elif x in range(ss+dd,ss+dd+xx) and y in range(h,h+yy) :
-                            print('人机模式')
+                        flag[i][j]=flag[ii][jj]
+                        flag[ii][jj]=-1
+                        selected=None
+                        select_chess = None
+                        role_change()
+                else:
+                    dd=160
+                    ss=28
+                    h=145
+                    xx=150
+                    yy=50
+                    if x in range(ss,ss+xx) and y in range(h+3,h+3+yy) :
+                        print('网络模式')
+                        #net_mode()
+                    elif x in range(ss+dd,ss+dd+xx) and y in range(h,h+yy) :
+                        print('人机模式')
                            # local()
-                        elif x in range(ss+dd*2,ss+dd*2+xx) and y in range(h,h+yy) :
-                            print('悔棋')
-                        elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
-                            print('重新开始')
-                            setting()
-                        elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) :
-                            print('游戏结束')
+                    elif x in range(ss+dd*2,ss+dd*2+xx) and y in range(h,h+yy) :
+                        print('悔棋')
+                    elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
+                        print('重新开始')
+                    elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) :
+                        print('游戏结束')
             draw()
             display.flip()  # 更新全部显示
+            if firsttime == 1:
+                firsttime = 0
+                win32api.MessageBox(0, "石头剪刀布，谁赢谁先出！", "提示",win32con.MB_OK)
 
     quit()  # 退出pygame
 
