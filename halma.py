@@ -125,30 +125,45 @@ def is_chess_clicked(x,y):
                         return i,j
     return None
 
-def is_space_clicked(x,y,select_chess):
+def removable(x,y,select_chess):
     global chess_pos
     global flag
+    
     d=54
-    dd=90
+    dd=170
     #被移动棋子的坐标
     xx,yy=select_chess
+    print(x,y)
+    print((x-chess_pos[xx][yy][0])*(x-chess_pos[xx][yy][0])+(y-chess_pos[xx][yy][1])*(y-chess_pos[xx][yy][1]))
+    print(dd*dd)
     print(select_chess)
     if (x-chess_pos[xx][yy][0])*(x-chess_pos[xx][yy][0])+(y-chess_pos[xx][yy][1])*(y-chess_pos[xx][yy][1])>dd*dd:
         return None
-    '''
-    for i in range(15):
-       print(flag[i])
-    '''
-    #dxy=[(xx-1,yy-1),(xx,yy-2),(xx+1,yy-1),(xx-1,yy+1),(xx,yy+2),(xx+1,yy+1)]
+    
+    #移
     dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
-
     for xy in dxy:
         i=xy[0]
         j=xy[1]
-        print(i,j)
         if flag[i][j]==-1:
             if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
                 return i,j
+    #邻
+    for xy in dxy:
+        
+        i=xy[0]
+        j=xy[1]
+        if flag[i][j]>-1:
+            print(i,j)
+            dx=i-xx
+            dy=j-yy
+            i=dx+i
+            j=dy+j
+            print(i,j)
+            if flag[i][j]==-1:
+                if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
+                    return i,j
+            
     return None
 
 
@@ -173,7 +188,7 @@ if __name__ == '__main__':
                         select_chess=selected
                         selected=None
                 elif select_chess != None:
-                    selected=is_space_clicked(x,y,select_chess)
+                    selected=removable(x,y,select_chess)
                     if selected is not None:
                         print('本次点击点击到了可移动的空格')
                         print(selected)
