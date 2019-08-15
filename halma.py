@@ -121,12 +121,12 @@ def draw():
     dd=160
     ss=28
     h=145
-    screen.blit(blue_sign, (30,250))
-    screen.blit(red_sign, (130,250))
+    screen.blit(blue_sign, (70,260))
+    screen.blit(red_sign, (730,260))
     if role=='blue' :
-        screen.blit(select_image,(30,250))
+        screen.blit(select_image,(70,260))
     else :
-        screen.blit(select_image,(130,250))
+        screen.blit(select_image,(730,260))
     screen.blit(net_mode_image, (ss, h+3))
     screen.blit(ai_mode_image, (ss+dd ,h))
     screen.blit(repent_image, (ss+dd*2, h))
@@ -370,11 +370,11 @@ if __name__ == '__main__':
                         
                         final_text2 = "Blue final score is:  " + str(blue_sum)
                         final_text1 = "Red final score is:  " + str(red_sum)
-                        font = pygame.font.SysFont("Arial", 30)
+                        font = pygame.font.SysFont("Ink Free", 30)
                         ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
                         ft2_surf = font.render(final_text2, 1, (65,105,225))                            
-                        screen.blit(ft2_surf, (20,700))  
-                        screen.blit(ft1_surf, (500,700))  
+                        screen.blit(ft2_surf, (70,210))  
+                        screen.blit(ft1_surf, (520,210))  
                         pygame.display.flip()                                                            # 更新整个待显示的Surface对象到屏幕上
                         sys.exit()
             draw()
