@@ -4,9 +4,15 @@ from math import *
 import itertools
 import random
 pygame.font.init()
-
-font = pygame.font.SysFont("Arial", 50)
-
+blue_sum=0
+red_sum=0
+final_text2 = "Blue final score is:  " + str(blue_sum)
+final_text1 = "Red final score is:  " + str(red_sum)
+font = pygame.font.SysFont("Ink Free", 30)
+ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
+ft2_surf = font.render(final_text2, 1, (65,105,225))                            
+game_end=False            
+                        
 def role_change():
     global role
     if role=='blue':
@@ -112,8 +118,15 @@ area= background.get_rect()  # 获取矩形区域
 def draw():
     global chess_pos
     global flag
-    global select_chess 
+    global select_chess
+    global ft2_surf
+    global ft1_surf
+    global blue_sum
+    global red_sum
     screen.blit(background, area)
+    if game_end:
+        screen.blit(ft2_surf, (70,210))  
+        screen.blit(ft1_surf, (520,210))  
     if select_chess !=None:
         screen.blit(select_image,chess_pos[select_chess[0]][select_chess[1]])
     pygame.display.set_caption("国际跳棋")
@@ -248,10 +261,9 @@ def removable(x,y,select_chess):
                         if num[each]>9:
                             num[each]=num[each]-10
                     num_list=[[] for i in range(num_len)]
-                    print(num)
+                    
                     num_list[num_len-1]=list(itertools.permutations(num,num_len))
                     while num_len>1:
-                        print(num_list)
                         for e in range(len(num_list[num_len-1])):
                             num1=num_list[num_len-1][e][0]
                             num2=num_list[num_len-1][e][1]
@@ -267,7 +279,7 @@ def removable(x,y,select_chess):
                             next_list=next_list+(num1*num2,)
                             num_list[num_len-2].append(next_list)
 
-                            if num2!=0:
+                            if num2!=0 and num1 % num2==0:
                                 next_list=num_list[num_len-1][e][2:]
                                 next_list=next_list+(num1//num2,)
                                 num_list[num_len-2].append(next_list)
@@ -277,7 +289,7 @@ def removable(x,y,select_chess):
                         for e in  range(tot):
                             num_list[num_len-1]+=itertools.permutations(num_list[num_len-1][e],num_len)
                         num_list[num_len-1]=list(set(num_list[num_len-1]))
-                    print(num_list)
+                        
                     if ((flag[xx][yy],) in num_list[0] and role=='blue') or ((flag[xx][yy]-10,) in num_list[0] and role=='red'):
                         return i,j
     return None
@@ -333,6 +345,7 @@ if __name__ == '__main__':
                            # local()
                     elif x in range(ss+dd*2,ss+dd*2+xx) and y in range(h,h+yy) :
                         print('悔棋')
+                        game_end=False
                         if pre_chess!=None:
                             ii,jj=pre_space
                             i,j=pre_chess
@@ -342,6 +355,7 @@ if __name__ == '__main__':
                             pre_chess=None
                     elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
                         print('重新开始')
+                        game_end=False
                         role='blue'
                         select_chess = None
                         selected=None
@@ -350,6 +364,7 @@ if __name__ == '__main__':
                         break
                     elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) :
                         print('算分叫停')
+                        game_end=True
                         blue_sum=0
                         for i in range(11,15):
                             for j in range(4,11):
@@ -368,15 +383,7 @@ if __name__ == '__main__':
                         print(blue_sum)
                         print(red_sum)
                         
-                        final_text2 = "Blue final score is:  " + str(blue_sum)
-                        final_text1 = "Red final score is:  " + str(red_sum)
-                        font = pygame.font.SysFont("Ink Free", 30)
-                        ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
-                        ft2_surf = font.render(final_text2, 1, (65,105,225))                            
-                        screen.blit(ft2_surf, (70,210))  
-                        screen.blit(ft1_surf, (520,210))  
-                        pygame.display.flip()                                                            # 更新整个待显示的Surface对象到屏幕上
-                        sys.exit()
+                        
             draw()
             pygame.display.flip()  # 更新全部显示
             
