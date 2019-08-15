@@ -2,11 +2,11 @@ import pygame
 import sys
 from math import *
 import itertools
-import random
+import copy
 pygame.font.init()
 blue_sum=0
 red_sum=0
-                      
+ans=[]     
 game_end=False            
                         
 def role_change():
@@ -119,12 +119,14 @@ def draw():
     global ft1_surf
     global blue_sum
     global red_sum
+    global ans
     final_text2 = "Blue final score is:  " + str(blue_sum)
     final_text1 = "Red final score is:  " + str(red_sum)
     font = pygame.font.SysFont("Ink Free", 30)
     ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
     ft2_surf = font.render(final_text2, 1, (65,105,225))      
     screen.blit(background, area)
+
     if game_end:
         screen.blit(ft2_surf, (70,210))  
         screen.blit(ft1_surf, (520,210))  
@@ -139,8 +141,23 @@ def draw():
     screen.blit(red_sign, (730,260))
     if role=='blue' :
         screen.blit(select_image,(70,260))
+        if ans!=[]:
+            font = pygame.font.SysFont("Segoe Script", 40)
+            hh=555
+            for each in ans:
+                ft2_surf = font.render(each, 1, (220, 20, 60))            
+                screen.blit(ft2_surf, (690,hh))
+                hh+=30
     else :
         screen.blit(select_image,(730,260))
+        if ans!=[]:
+            font = pygame.font.SysFont("Segoe Script", 40)
+            hh=555
+            for each in ans:
+                ft2_surf = font.render(each, 1, (65,105,225))      
+                screen.blit(ft2_surf, (20,hh))
+                hh+=30
+                
     screen.blit(net_mode_image, (ss, h+3))
     screen.blit(ai_mode_image, (ss+dd ,h))
     screen.blit(repent_image, (ss+dd*2, h))
@@ -156,6 +173,76 @@ def draw():
 
 #sound_background.play()
 
+def dfs(num,ans,goal):
+    print(ans)
+    if num==[] or len(num)<1:
+        return []
+    if len(num)==1:
+        if ( goal == num[0] and role=='blue') or (goal-10 == num[0] and role=='red'):
+            return ans
+    size=len(num)
+    ans0=copy.deepcopy(ans)
+    for num1 in range(size):
+        for num2 in range(num1+1,size):
+            next_num=copy.deepcopy(num)
+            next_num.pop(num2)
+            next_num.pop(num1)
+            num0=copy.deepcopy(next_num)
+            tmp=num[num1]+num[num2]
+            next_num.append(tmp)
+            ans.append(str(num[num1])+'+'+str(num[num2])+'='+str(tmp))
+            ret=dfs(next_num,  ans ,  goal)
+            if ret!=[]:
+                return ret
+            
+            next_num=copy.deepcopy(num0)
+            ans=copy.deepcopy(ans0)
+            tmp=num[num1]-num[num2]
+            next_num.append(tmp)
+            ans.append(str(num[num1])+'-'+str(num[num2])+'='+str(tmp))
+            ret=dfs(next_num,  ans ,  goal)
+            if ret!=[]:
+                return ret
+            
+            next_num=copy.deepcopy(num0)
+            ans=copy.deepcopy(ans0)
+            tmp=num[num2]-num[num1]
+            next_num.append(tmp)
+            ans.append(str(num[num2])+'-'+str(num[num1])+'='+str(tmp))
+            ret=dfs(next_num,  ans ,  goal)
+            if ret!=[]:
+                return ret
+            
+            next_num=copy.deepcopy(num0)
+            ans=copy.deepcopy(ans0)
+            tmp=num[num1]*num[num2]
+            next_num.append(tmp)
+            ans.append(str(num[num1])+'*'+str(num[num2])+'='+str(tmp))
+            ret=dfs(next_num,  ans ,  goal)
+            if ret!=[]:
+                return ret
+            
+            if num[num2]!=0 and num[num1] % num[num2]==0:
+                next_num=copy.deepcopy(num0)
+                ans=copy.deepcopy(ans0)
+                tmp=num[num1]//num[num2]
+                next_num.append(tmp)
+                ans.append(str(num[num1])+'/'+str(num[num2])+'='+str(tmp))
+                ret=dfs(next_num,  ans ,  goal)
+                if ret!=[]:
+                    return ret
+                
+            if num[num1]!=0 and num[num2] % num[num1]==0:
+                next_num=copy.deepcopy(num0)
+                ans=copy.deepcopy(ans0)
+                tmp=num[num2]/num[num1]
+                next_num.append(tmp)
+                ans.append(str(num[num2])+'/'+str(num[num1])+'='+str(tmp))
+                ret=dfs(next_num,  ans ,  goal)
+                if ret!=[]:
+                    return ret
+    return []
+            
 def is_chess_clicked(x,y):
     d=54
     global role
@@ -173,6 +260,7 @@ def removable(x,y,select_chess):
     global chess_pos
     global flag
     global role
+    global ans
     d=54
     
     #dd=170
@@ -262,39 +350,12 @@ def removable(x,y,select_chess):
                     for each in range(num_len):
                         if num[each]>9:
                             num[each]=num[each]-10
-                    num_list=[[] for i in range(num_len)]
-                    
-                    num_list[num_len-1]=list(itertools.permutations(num,num_len))
-                    print(num_list)
-                    while num_len>1:
-                        for e in range(len(num_list[num_len-1])):
-                            num1=num_list[num_len-1][e][0]
-                            num2=num_list[num_len-1][e][1]
-                            next_list=num_list[num_len-1][e][2:]
-                            next_list=next_list+(num1+num2,)
-                            num_list[num_len-2].append(next_list)
-                            
-                            next_list=num_list[num_len-1][e][2:]
-                            next_list=next_list+(num1-num2,)
-                            num_list[num_len-2].append(next_list)
-                            
-                            next_list=num_list[num_len-1][e][2:]
-                            next_list=next_list+(num1*num2,)
-                            num_list[num_len-2].append(next_list)
-
-                            if num2!=0 and num1 % num2==0:
-                                next_list=num_list[num_len-1][e][2:]
-                                next_list=next_list+(num1//num2,)
-                                num_list[num_len-2].append(next_list)
-                            
-                        num_len-=1
-                        tot=len(num_list[num_len-1])
-                        for e in  range(tot):
-                            num_list[num_len-1]+=itertools.permutations(num_list[num_len-1][e],num_len)
-                        num_list[num_len-1]=list(set(num_list[num_len-1]))
-                        
-                    if ((flag[xx][yy],) in num_list[0] and role=='blue') or ((flag[xx][yy]-10,) in num_list[0] and role=='red'):
+                    ans=dfs(num,[],flag[xx][yy])
+                    print(ans)
+                    if ans!=[]:
                         return i,j
+                    
+                    
     return None
 
 pre_space=None
@@ -312,12 +373,13 @@ if __name__ == '__main__':
                 if e.key == K_ESCAPE:
                     sys.exit()
                     
-            if e.type == pygame.MOUSEBUTTONDOWN:
+            elif e.type == pygame.MOUSEBUTTONDOWN:
                 x,y = pygame.mouse.get_pos()
                 selected = is_chess_clicked(x,y)
                 if selected is not None:
                         print('本次点击点击到了棋子')
                         print(selected)
+                        ans=[]
                         select_chess=selected
                         selected=None
                 elif select_chess != None:
@@ -385,8 +447,8 @@ if __name__ == '__main__':
                                     print(weight[j][i],flag[j][i])
                         print(blue_sum)
                         print(red_sum)
-                        
-                        
+            else:
+                pass   
             draw()
             pygame.display.flip()  # 更新全部显示
             
