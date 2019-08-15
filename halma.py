@@ -6,11 +6,7 @@ import random
 pygame.font.init()
 blue_sum=0
 red_sum=0
-final_text2 = "Blue final score is:  " + str(blue_sum)
-final_text1 = "Red final score is:  " + str(red_sum)
-font = pygame.font.SysFont("Ink Free", 30)
-ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
-ft2_surf = font.render(final_text2, 1, (65,105,225))                            
+                      
 game_end=False            
                         
 def role_change():
@@ -112,7 +108,7 @@ ai_mode_image = pygame.image.load("./image/ai_mode.png").convert_alpha()
 repent_image = pygame.image.load("./image/repent.png").convert_alpha()
 restart_image =pygame.image.load("./image/restart.png").convert_alpha()
 quit_image = pygame.image.load("./image/quit.png").convert_alpha()
-sound_background = pygame.mixer.Sound("./sound/background.wav")
+#sound_background = pygame.mixer.Sound("./sound/background.wav")
 sound_move = pygame.mixer.Sound("./sound/move.wav")
 area= background.get_rect()  # 获取矩形区域
 def draw():
@@ -123,6 +119,11 @@ def draw():
     global ft1_surf
     global blue_sum
     global red_sum
+    final_text2 = "Blue final score is:  " + str(blue_sum)
+    final_text1 = "Red final score is:  " + str(red_sum)
+    font = pygame.font.SysFont("Ink Free", 30)
+    ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
+    ft2_surf = font.render(final_text2, 1, (65,105,225))      
     screen.blit(background, area)
     if game_end:
         screen.blit(ft2_surf, (70,210))  
@@ -247,7 +248,8 @@ def removable(x,y,select_chess):
                             jj=j
                         if flag[ii][jj]>-1 and ii>=0 and ii<=14 and jj>=0 and jj<=14:
                             for iii in range(min(i,xx),max(i,xx)+1,2):
-                                num.append(flag[iii][j])     
+                                if flag[iii][j]>-1:
+                                    num.append(flag[iii][j])     
                     else:
                         break
                     if num==[]:
@@ -263,6 +265,7 @@ def removable(x,y,select_chess):
                     num_list=[[] for i in range(num_len)]
                     
                     num_list[num_len-1]=list(itertools.permutations(num,num_len))
+                    print(num_list)
                     while num_len>1:
                         for e in range(len(num_list[num_len-1])):
                             num1=num_list[num_len-1][e][0]
