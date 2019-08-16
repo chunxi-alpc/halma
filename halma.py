@@ -3,18 +3,17 @@ import sys
 from math import *
 import itertools
 import copy
+from ai import*
+from init import*
+
+pre_space=None
+pre_chess=None
 pygame.font.init()
 blue_sum=0
 red_sum=0
 ans=[]     
 game_end=False            
-                        
-def role_change():
-    global role
-    if role=='blue':
-        role='red'
-    else:
-        role='blue'
+mode = 'p2p'
 role='blue'
 select_chess = None
 selected=None
@@ -103,14 +102,23 @@ area=b[0].get_rect()
 blue_sign=pygame.image.load("./image/蓝棋.png").convert_alpha()
 red_sign=pygame.image.load("./image/红棋.png").convert_alpha()
 
-net_mode_image = pygame.image.load("./image/net_mode.png").convert_alpha()
-ai_mode_image = pygame.image.load("./image/ai_mode.png").convert_alpha()
+mode_select_image = pygame.image.load("./image/mode_select.png").convert_alpha()
 repent_image = pygame.image.load("./image/repent.png").convert_alpha()
 restart_image =pygame.image.load("./image/restart.png").convert_alpha()
 quit_image = pygame.image.load("./image/quit.png").convert_alpha()
 #sound_background = pygame.mixer.Sound("./sound/background.wav")
 sound_move = pygame.mixer.Sound("./sound/move.wav")
 area= background.get_rect()  # 获取矩形区域
+
+
+
+def role_change():
+    global role
+    if role=='blue':
+        role='red'
+    else:
+        role='blue'
+        
 def draw():
     global chess_pos
     global flag
@@ -120,6 +128,7 @@ def draw():
     global blue_sum
     global red_sum
     global ans
+    global mode
     final_text2 = "Blue final score is:  " + str(blue_sum)
     final_text1 = "Red final score is:  " + str(red_sum)
     font = pygame.font.SysFont("Ink Free", 30)
@@ -129,7 +138,8 @@ def draw():
 
     if game_end:
         screen.blit(ft2_surf, (70,210))  
-        screen.blit(ft1_surf, (520,210))  
+        screen.blit(ft1_surf, (520,210))
+
     if select_chess !=None:
         screen.blit(select_image,chess_pos[select_chess[0]][select_chess[1]])
     pygame.display.set_caption("国际跳棋")
@@ -157,9 +167,22 @@ def draw():
                 ft2_surf = font.render(each, 1, (65,105,225))      
                 screen.blit(ft2_surf, (20,hh))
                 hh+=30
-                
-    screen.blit(net_mode_image, (ss, h+3))
-    screen.blit(ai_mode_image, (ss+dd ,h))
+    if mode=='p2p':
+        screen.blit(mode_select_image, (ss+dd/2-15 ,h-20-8))
+    elif mode=='ai':
+        screen.blit(mode_select_image, (ss+dd-20 ,h+20-8))
+    else :
+        screen.blit(mode_select_image, (ss-15 ,h+20-8))
+        
+    font = pygame.font.SysFont("Ink Free", 20)
+    ft0 = font.render("Net Mode", 1, (0,100,0))            
+    screen.blit(ft0, (ss, h+20))
+    ft0 = font.render("AI Mode", 1, (0, 100, 0))            
+    screen.blit(ft0, (ss+dd ,h+20))
+    ft0 = font.render("P2P Mode", 1, (0, 100, 0))            
+    screen.blit(ft0, (ss+dd/2 ,h-20))
+    
+    
     screen.blit(repent_image, (ss+dd*2, h))
     screen.blit(restart_image, (ss+dd*3,h))
     screen.blit(quit_image, (ss+dd*4,h+7))
@@ -300,7 +323,7 @@ def removable(x,y,select_chess):
                 if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
                 #选择到一个空格
                     num=[]
-                    #左斜
+                    #左斜.
                     if i+j==xx+yy:
                         if i>xx:
                             ii=i-1
@@ -358,97 +381,227 @@ def removable(x,y,select_chess):
                     
     return None
 
-pre_space=None
-pre_chess=None
+times=[0 for i in range(10)]
+
+#默认red为电脑方
+def ai_go(i,j,xx,yy):
+    global times
+    global flag
+    flag[i][j]=flag[xx][yy]
+    times[flag[xx][yy]-10]-=2
+    flag[xx][yy]=-1
+    global pre_space
+    global pre_chess
+    pre_space=i,j
+    pre_chess=xx,yy
+    global selected
+    global select_chess
+    selected=None
+    select_chess = None
+    role_change()
+    
+
+def ai():
+    global chess_pos
+    global flag
+    global ans
+    global times
+    
+    value=[0 for i in range(10)]
+    #按照f(x)=abs(dx)+abs(dy)排序尝试的棋子
+    
+    cc=[0 for i in range(10)]
+    #存储red所有棋子的位置
+    
+    for i in range(15):
+        for j in range(15):
+            if flag[i][j]>9:
+                v=flag[i][j]-10
+                dis=abs(i-7)+abs(j)
+                value[v]=dis+times[v]
+                cc[v]=i,j
+    print(value) 
+    for kk in range(10):
+        it=value.index(max(value))
+        #it为当前尝试移动棋子编号，红色棋子>9
+        xx=cc[it][0]
+        yy=cc[it][1]
+        print(xx,yy)
+        #左斜
+        for i in range(14,xx,-1):
+            j=xx+yy-i
+            if flag[i][j]==-1:
+            #(i,j)为空格的位置
+                num=[]
+                ii=i-1
+                jj=j+1
+                if flag[ii][jj]>-1 and ii!=xx:
+                    for iii in range(ii,15):
+                        jjj=xx+yy-iii
+                        if flag[iii][jjj]>-1:
+                            num.append(flag[iii][jjj])
+                if num==[]:
+                    break
+                num_len=len(num)
+                for each in range(num_len):
+                    if num[each]>9:
+                        num[each]=num[each]-10
+                ans=dfs(num,[],flag[xx][yy])
+                print(ans)
+                if ans!=[]:
+                    ai_go(i,j,xx,yy)
+                    return
+        #右斜
+        for i in range(0,xx):
+            j=i-xx+yy
+            if flag[i][j]==-1:
+            #(i,j)为空格的位置
+                print(i,j)
+                num=[]
+                ii=i+1
+                jj=j+1
+                if flag[ii][jj]>-1 and ii!=xx:
+                    for iii in range(ii,xx):
+                        jjj=yy-xx+iii
+                        if flag[iii][jjj]>-1:
+                            num.append(flag[iii][jjj])
+                if num==[]:
+                    break
+                num_len=len(num)
+                for each in range(num_len):
+                    if num[each]>9:
+                        num[each]=num[each]-10
+                ans=dfs(num,[],flag[xx][yy])
+                print(ans)
+                if ans!=[]:
+                    ai_go(i,j,xx,yy)
+                    return
+
+        dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
+
+        #邻
+        for xy in dxy:
+            i=xy[0]
+            j=xy[1]
+            if i>=0 and i<=14 and j>=0 and j<=14:
+                if flag[i][j]>-1:
+                    dx=i-xx
+                    dy=j-yy
+                    i=dx+i
+                    j=dy+j
+                    if i>=0 and i<=14 and j>=0 and j<=14:
+                        if flag[i][j]==-1:
+                            ai_go(i,j,xx,yy)
+                            return
+
+        #移
+        for xy in dxy:
+            i=xy[0]
+            j=xy[1]
+            if i>=0 and i<=14 and j>=0 and j<=14:
+                if flag[i][j]==-1:
+                    ai_go(i,j,xx,yy)
+                    return
+                 
+        value[it]=0
 
 if __name__ == '__main__':
-    
     draw()
+    dd=160
+    ss=28
+    h=145
+    xx=150
+    yy=50
     while True:  # 死循环确保窗口一直显示
         for e in pygame.event.get():  # 遍历所有事件
             if e.type == pygame.QUIT:  # 如果单击关闭窗口，则退出
                 sys.exit()
+                
             # 按Esc则退出游戏
-            if e.type == pygame.KEYDOWN:
-                if e.key == K_ESCAPE:
+            elif e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
                     sys.exit()
+                    
+            elif (role=='red' and mode=='ai'):
+                    pygame.time.delay(2000)
+                    ai()
                     
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 x,y = pygame.mouse.get_pos()
-                selected = is_chess_clicked(x,y)
-                if selected is not None:
-                        print('本次点击点击到了棋子')
-                        print(selected)
-                        ans=[]
-                        select_chess=selected
-                        selected=None
-                elif select_chess != None:
-                    selected=removable(x,y,select_chess)
-                    if selected is not None:
-                        print('本次点击点击到了可移动的空格')
-                        print(selected)
-                        i,j=selected
-                        ii,jj=select_chess
+                print(x,y)
+                if x in range(ss+dd//2,ss+dd//2+xx) and y in range(h-20,h-20+yy) :
+                    print('P2P模式')
+                    mode = 'p2p'
+                elif x in range(ss,ss+xx) and y in range(h+3,h+3+yy) :
+                    print('网络模式')
+                    mode = 'net'
+                elif x in range(ss+dd,ss+dd+xx) and y in range(h,h+yy) :
+                    print('人机模式')
+                    mode = 'ai'
+                elif x in range(ss+dd*2,ss+dd*2+xx) and y in range(h,h+yy) :
+                    print('悔棋')
+                    game_end=False
+                    if pre_chess!=None:
+                        ii,jj=pre_space
+                        i,j=pre_chess
                         flag[i][j]=flag[ii][jj]
                         flag[ii][jj]=-1
-                        pre_space=selected
-                        pre_chess=select_chess
-                        selected=None
-                        select_chess = None
                         role_change()
-                else:
-                    dd=160
-                    ss=28
-                    h=145
-                    xx=150
-                    yy=50
-                    if x in range(ss,ss+xx) and y in range(h+3,h+3+yy) :
-                        print('网络模式')
-                        #net_mode()
-                    elif x in range(ss+dd,ss+dd+xx) and y in range(h,h+yy) :
-                        print('人机模式')
-                           # local()
-                    elif x in range(ss+dd*2,ss+dd*2+xx) and y in range(h,h+yy) :
-                        print('悔棋')
-                        game_end=False
-                        if pre_chess!=None:
-                            ii,jj=pre_space
-                            i,j=pre_chess
+                        pre_chess=None
+                elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
+                    print('重新开始')
+                    game_end=False
+                    role='blue'
+                    select_chess = None
+                    selected=None
+                    re_chess=None
+                    flag=weight
+                    break
+                elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) :
+                    print('算分叫停')
+                    game_end=True
+                    blue_sum=0
+                    for i in range(11,15):
+                        for j in range(4,11):
+                            if flag[j][i]>0 and flag[j][i]<10:
+                                blue_sum+=(weight[j][i]-10)*flag[j][i]
+                                print(weight[j][i],flag[j][i])
+                    red_sum=0
+                    cnt=0
+                    for i in range(0,4):
+                        for j in range(4,11):
+                            if flag[j][i]>-2:
+                                cnt+=1
+                            if flag[j][i]>9 :
+                                red_sum+=weight[j][i]*(flag[j][i]-10)
+                                print(weight[j][i],flag[j][i])
+                    print(blue_sum)
+                    print(red_sum)
+                elif mode=='p2p' or (role=='blue' and mode=='ai'):
+                    selected = is_chess_clicked(x,y)
+                    if selected is not None:
+                            print('本次点击点击到了棋子')
+                            ans=[]
+
+                            select_chess=copy.deepcopy(selected)
+                            print(select_chess)
+                            selected=None
+                    elif select_chess != None:
+                        selected=removable(x,y,select_chess)
+                        if selected is not None:
+                            print('本次点击点击到了可移动的空格')
+                            print(selected)
+                            i,j=selected
+                            ii,jj=select_chess
                             flag[i][j]=flag[ii][jj]
                             flag[ii][jj]=-1
+                            pre_space=selected
+                            pre_chess=select_chess
+                            selected=None
+                            select_chess = None
                             role_change()
-                            pre_chess=None
-                    elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
-                        print('重新开始')
-                        game_end=False
-                        role='blue'
-                        select_chess = None
-                        selected=None
-                        re_chess=None
-                        flag=weight
-                        break
-                    elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) :
-                        print('算分叫停')
-                        game_end=True
-                        blue_sum=0
-                        for i in range(11,15):
-                            for j in range(4,11):
-                                if flag[j][i]>0 and flag[j][i]<10:
-                                    blue_sum+=(weight[j][i]-10)*flag[j][i]
-                                    print(weight[j][i],flag[j][i])
-                        red_sum=0
-                        cnt=0
-                        for i in range(0,4):
-                            for j in range(4,11):
-                                if flag[j][i]>-2:
-                                    cnt+=1
-                                if flag[j][i]>9 :
-                                    red_sum+=weight[j][i]*(flag[j][i]-10)
-                                    print(weight[j][i],flag[j][i])
-                        print(blue_sum)
-                        print(red_sum)
-            else:
-                pass   
+                
+
             draw()
             pygame.display.flip()  # 更新全部显示
             
