@@ -3,8 +3,7 @@ import sys
 from math import *
 import itertools
 import copy
-#from ai import*
-#from init import*
+import random
 
 pre_space=None
 pre_chess=None
@@ -387,7 +386,8 @@ times=[0 for i in range(10)]
 def ai_go(i,j,xx,yy):
     global times
     global flag
-    flag[i][j]=flag[xx][yy]
+    flag[i][j]=copy.deepcopy(flag[xx][yy])
+    print(flag[xx][yy])
     times[flag[xx][yy]-10]-=2
     flag[xx][yy]=-1
     global pre_space
@@ -400,7 +400,97 @@ def ai_go(i,j,xx,yy):
     select_chess = None
     role_change()
     
+def left_line(xx,yy):
+    #左斜
+    global flag
+    global ans
+    for i in range(14,xx,-1):
+        j=xx+yy-i
+        if flag[i][j]==-1:
+        #(i,j)为空格的位置
+            num=[]
+            ii=i-1
+            jj=j+1
+            if flag[ii][jj]>-1 and ii!=xx:
+                for iii in range(ii,15):
+                    jjj=xx+yy-iii
+                    if flag[iii][jjj]>-1:
+                        num.append(flag[iii][jjj])
+            if num==[]:
+                break
+            num_len=len(num)
+            for each in range(num_len):
+                if num[each]>9:
+                    num[each]=num[each]-10
+            ans=dfs(num,[],flag[xx][yy])
+            print(ans)
+            if ans!=[]:
+                ai_go(i,j,xx,yy)
+                return True
+    return False
 
+def right_line(xx,yy):
+    #右斜
+    global flag
+    global ans
+    for i in range(0,xx):
+        j=i-xx+yy
+        if flag[i][j]==-1:
+        #(i,j)为空格的位置
+            print(i,j)
+            num=[]
+            ii=i+1
+            jj=j+1
+            if flag[ii][jj]>-1 and ii!=xx:
+                for iii in range(ii,xx):
+                    jjj=yy-xx+iii
+                    if flag[iii][jjj]>-1:
+                        num.append(flag[iii][jjj])
+            if num==[]:
+                break
+            num_len=len(num)
+            for each in range(num_len):
+                if num[each]>9:
+                    num[each]=num[each]-10
+            ans=dfs(num,[],flag[xx][yy])
+            print(ans)
+            if ans!=[]:
+                ai_go(i,j,xx,yy)
+                return True
+    return False
+
+def one_step(xx,yy):
+    global flag
+    dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
+    #邻
+    for xy in dxy:
+        i=xy[0]
+        j=xy[1]
+        if i>=0 and i<=14 and j>=0 and j<=14:
+            if flag[i][j]>-1:
+                dx=i-xx
+                dy=j-yy
+                i=dx+i
+                j=dy+j
+                if i>=0 and i<=14 and j>=0 and j<=14:
+                    if flag[i][j]==-1:
+                        ai_go(i,j,xx,yy)
+                        return True
+    return False
+
+def two_step(xx,yy):
+    global flag
+    dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
+    #移
+    for xy in dxy:
+        i=xy[0]
+        j=xy[1]
+        if i>=0 and i<=14 and j>=0 and j<=14:
+            if flag[i][j]==-1:
+                ai_go(i,j,xx,yy)
+                return True
+    return False
+    
 def ai():
     global chess_pos
     global flag
@@ -420,89 +510,29 @@ def ai():
                 dis=abs(i-7)+abs(j)
                 value[v]=dis+times[v]
                 cc[v]=i,j
-    print(value) 
+    
     for kk in range(10):
         it=value.index(max(value))
+        print(value) 
         #it为当前尝试移动棋子编号，红色棋子>9
         xx=cc[it][0]
         yy=cc[it][1]
-        print(xx,yy)
-        #左斜
-        for i in range(14,xx,-1):
-            j=xx+yy-i
-            if flag[i][j]==-1:
-            #(i,j)为空格的位置
-                num=[]
-                ii=i-1
-                jj=j+1
-                if flag[ii][jj]>-1 and ii!=xx:
-                    for iii in range(ii,15):
-                        jjj=xx+yy-iii
-                        if flag[iii][jjj]>-1:
-                            num.append(flag[iii][jjj])
-                if num==[]:
-                    break
-                num_len=len(num)
-                for each in range(num_len):
-                    if num[each]>9:
-                        num[each]=num[each]-10
-                ans=dfs(num,[],flag[xx][yy])
-                print(ans)
-                if ans!=[]:
-                    ai_go(i,j,xx,yy)
+        print(flag[xx][yy])
+        q=[0,1,2,3]
+        random.shuffle(q)
+        for each in q:
+            if each==0:
+                if left_line(xx,yy):
                     return
-        #右斜
-        for i in range(0,xx):
-            j=i-xx+yy
-            if flag[i][j]==-1:
-            #(i,j)为空格的位置
-                print(i,j)
-                num=[]
-                ii=i+1
-                jj=j+1
-                if flag[ii][jj]>-1 and ii!=xx:
-                    for iii in range(ii,xx):
-                        jjj=yy-xx+iii
-                        if flag[iii][jjj]>-1:
-                            num.append(flag[iii][jjj])
-                if num==[]:
-                    break
-                num_len=len(num)
-                for each in range(num_len):
-                    if num[each]>9:
-                        num[each]=num[each]-10
-                ans=dfs(num,[],flag[xx][yy])
-                print(ans)
-                if ans!=[]:
-                    ai_go(i,j,xx,yy)
+            elif each==1:
+                if right_line(xx,yy):
                     return
-
-        dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
-
-        #邻
-        for xy in dxy:
-            i=xy[0]
-            j=xy[1]
-            if i>=0 and i<=14 and j>=0 and j<=14:
-                if flag[i][j]>-1:
-                    dx=i-xx
-                    dy=j-yy
-                    i=dx+i
-                    j=dy+j
-                    if i>=0 and i<=14 and j>=0 and j<=14:
-                        if flag[i][j]==-1:
-                            ai_go(i,j,xx,yy)
-                            return
-
-        #移
-        for xy in dxy:
-            i=xy[0]
-            j=xy[1]
-            if i>=0 and i<=14 and j>=0 and j<=14:
-                if flag[i][j]==-1:
-                    ai_go(i,j,xx,yy)
+            elif each==2:
+                if one_step(xx,yy):
                     return
-                 
+            else:
+                if two_step(xx,yy):
+                    return
         value[it]=0
 
 if __name__ == '__main__':
@@ -582,9 +612,8 @@ if __name__ == '__main__':
                     if selected is not None:
                             print('本次点击点击到了棋子')
                             ans=[]
-
+                            print(selected)
                             select_chess=copy.deepcopy(selected)
-                            print(select_chess)
                             selected=None
                     elif select_chess != None:
                         selected=removable(x,y,select_chess)
@@ -593,7 +622,7 @@ if __name__ == '__main__':
                             print(selected)
                             i,j=selected
                             ii,jj=select_chess
-                            flag[i][j]=flag[ii][jj]
+                            flag[i][j]=copy.deepcopy(flag[ii][jj])
                             flag[ii][jj]=-1
                             pre_space=selected
                             pre_chess=select_chess
