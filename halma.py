@@ -3,8 +3,8 @@ import sys
 from math import *
 import itertools
 import copy
-from ai import*
-from init import*
+#from ai import*
+#from init import*
 
 pre_space=None
 pre_chess=None
