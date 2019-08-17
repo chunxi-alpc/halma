@@ -5,6 +5,8 @@ import itertools
 import copy
 import random
 
+ok=0
+last_moment=0
 pre_space=None
 pre_chess=None
 pygame.font.init()
@@ -100,7 +102,7 @@ for i in range(10):
 area=b[0].get_rect()
 blue_sign=pygame.image.load("./image/蓝棋.png").convert_alpha()
 red_sign=pygame.image.load("./image/红棋.png").convert_alpha()
-
+ok_sign=pygame.image.load("./image/ok.jpg").convert_alpha()
 mode_select_image = pygame.image.load("./image/mode_select.png").convert_alpha()
 repent_image = pygame.image.load("./image/repent.png").convert_alpha()
 restart_image =pygame.image.load("./image/restart.png").convert_alpha()
@@ -122,12 +124,17 @@ def draw():
     global chess_pos
     global flag
     global select_chess
+    global ai_s
+    global ai_t
     global ft2_surf
     global ft1_surf
     global blue_sum
     global red_sum
     global ans
     global mode
+    global pre_space
+    global pre_chess
+    
     final_text2 = "Blue final score is:  " + str(blue_sum)
     final_text1 = "Red final score is:  " + str(red_sum)
     font = pygame.font.SysFont("Ink Free", 30)
@@ -139,6 +146,10 @@ def draw():
         screen.blit(ft2_surf, (70,210))  
         screen.blit(ft1_surf, (520,210))
 
+    if pre_space !=None:
+        screen.blit(select_image,chess_pos[pre_space[0]][pre_space[1]])
+    if pre_chess !=None:
+        screen.blit(select_image,chess_pos[pre_chess[0]][pre_chess[1]])
     if select_chess !=None:
         screen.blit(select_image,chess_pos[select_chess[0]][select_chess[1]])
     pygame.display.set_caption("国际跳棋")
@@ -157,6 +168,7 @@ def draw():
                 ft2_surf = font.render(each, 1, (220, 20, 60))            
                 screen.blit(ft2_surf, (690,hh))
                 hh+=30
+            
     else :
         screen.blit(select_image,(730,260))
         if ans!=[]:
@@ -166,6 +178,7 @@ def draw():
                 ft2_surf = font.render(each, 1, (65,105,225))      
                 screen.blit(ft2_surf, (20,hh))
                 hh+=30
+        screen.blit(ok_sign, (130,666))
     if mode=='p2p':
         screen.blit(mode_select_image, (ss+dd/2-15 ,h-20-8))
     elif mode=='ai':
@@ -196,8 +209,7 @@ def draw():
 #sound_background.play()
 
 def dfs(num,ans,goal):
-    print(ans)
-    if num==[] or len(num)<1:
+    if len(num)<1:
         return []
     if len(num)==1:
         if ( goal == num[0] and role=='blue') or (goal-10 == num[0] and role=='red'):
@@ -461,7 +473,11 @@ def right_line(xx,yy):
 
 def one_step(xx,yy):
     global flag
-    dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
+    global last_moment
+    if last_moment==1:
+        dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
+    else:
+        dxy=[(xx-1,yy-1),(xx+1,yy-1)]
     #邻
     for xy in dxy:
         i=xy[0]
@@ -480,7 +496,11 @@ def one_step(xx,yy):
 
 def two_step(xx,yy):
     global flag
-    dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
+    global last_moment
+    if last_moment==1:
+        dxy=[(xx-1,yy-1),(xx-2,yy),(xx+1,yy-1),(xx-1,yy+1),(xx+2,yy),(xx+1,yy+1)]
+    else:
+        dxy=[(xx-1,yy-1),(xx+1,yy-1)]
     #移
     for xy in dxy:
         i=xy[0]
@@ -517,7 +537,6 @@ def ai():
         #it为当前尝试移动棋子编号，红色棋子>9
         xx=cc[it][0]
         yy=cc[it][1]
-        print(flag[xx][yy])
         q=[0,1,2,3]
         random.shuffle(q)
         for each in q:
@@ -533,7 +552,7 @@ def ai():
             else:
                 if two_step(xx,yy):
                     return
-        value[it]=0
+        value[it]=-99999
 
 if __name__ == '__main__':
     draw()
@@ -542,6 +561,7 @@ if __name__ == '__main__':
     h=145
     xx=150
     yy=50
+    
     while True:  # 死循环确保窗口一直显示
         for e in pygame.event.get():  # 遍历所有事件
             if e.type == pygame.QUIT:  # 如果单击关闭窗口，则退出
@@ -552,14 +572,18 @@ if __name__ == '__main__':
                 if e.key == pygame.K_ESCAPE:
                     sys.exit()
                     
-            elif (role=='red' and mode=='ai'):
+            elif (role=='red' and mode=='ai' and ok==1):
                     pygame.time.delay(2000)
                     ai()
+                    last_moment=1
+                    ok=0
                     
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 x,y = pygame.mouse.get_pos()
                 print(x,y)
-                if x in range(ss+dd//2,ss+dd//2+xx) and y in range(h-20,h-20+yy) :
+                if x in range(130,200) and y in range(666,720) :
+                    ok=1
+                elif x in range(ss+dd//2,ss+dd//2+xx) and y in range(h-20,h-20+yy) :
                     print('P2P模式')
                     mode = 'p2p'
                 elif x in range(ss,ss+xx) and y in range(h+3,h+3+yy) :
@@ -578,6 +602,7 @@ if __name__ == '__main__':
                         flag[ii][jj]=-1
                         role_change()
                         pre_chess=None
+                        ans=[]
                 elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
                     print('重新开始')
                     game_end=False
@@ -597,11 +622,8 @@ if __name__ == '__main__':
                                 blue_sum+=(weight[j][i]-10)*flag[j][i]
                                 print(weight[j][i],flag[j][i])
                     red_sum=0
-                    cnt=0
                     for i in range(0,4):
                         for j in range(4,11):
-                            if flag[j][i]>-2:
-                                cnt+=1
                             if flag[j][i]>9 :
                                 red_sum+=weight[j][i]*(flag[j][i]-10)
                                 print(weight[j][i],flag[j][i])
@@ -612,9 +634,10 @@ if __name__ == '__main__':
                     if selected is not None:
                             print('本次点击点击到了棋子')
                             ans=[]
+                            last_moment=0
                             print(selected)
                             select_chess=copy.deepcopy(selected)
-                            selected=None
+
                     elif select_chess != None:
                         selected=removable(x,y,select_chess)
                         if selected is not None:
