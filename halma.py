@@ -99,7 +99,7 @@ for i in range(10):
     b.append(pygame.image.load('./image/蓝棋'+str(i)+'.png'))
 for i in range(10):
     r.append(pygame.image.load('./image/红棋'+str(i)+'.png'))
-area=b[0].get_rect()
+
 blue_sign=pygame.image.load("./image/蓝棋.png").convert_alpha()
 red_sign=pygame.image.load("./image/红棋.png").convert_alpha()
 ok_sign=pygame.image.load("./image/ok.jpg").convert_alpha()
@@ -152,7 +152,7 @@ def draw():
         screen.blit(select_image,chess_pos[pre_chess[0]][pre_chess[1]])
     if select_chess !=None:
         screen.blit(select_image,chess_pos[select_chess[0]][select_chess[1]])
-    pygame.display.set_caption("国际跳棋")
+    pygame.display.set_caption("国际数棋")
     #棋子初始坐标
     dd=160
     ss=28
@@ -178,7 +178,10 @@ def draw():
                 ft2_surf = font.render(each, 1, (65,105,225))      
                 screen.blit(ft2_surf, (20,hh))
                 hh+=30
-        screen.blit(ok_sign, (130,666))
+        
+        if mode == 'ai':
+            screen.blit(ok_sign, (130,666))
+            pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
     if mode=='p2p':
         screen.blit(mode_select_image, (ss+dd/2-15 ,h-20-8))
     elif mode=='ai':
@@ -602,6 +605,7 @@ if __name__ == '__main__':
                         flag[ii][jj]=-1
                         role_change()
                         pre_chess=None
+                        pre_space=None
                         ans=[]
                 elif x in range(ss+dd*3,ss+dd*3+xx) and y in range(h,h+yy) :
                     print('重新开始')
