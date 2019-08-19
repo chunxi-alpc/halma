@@ -5,6 +5,9 @@ import itertools
 import copy
 import random
 
+num=[]
+input_flag=0
+current_string = []
 ok=0
 last_moment=0
 pre_space=None
@@ -111,7 +114,46 @@ quit_image = pygame.image.load("./image/quit.png").convert_alpha()
 sound_move = pygame.mixer.Sound("./sound/move.wav")
 area= background.get_rect()  # 获取矩形区域
 
+def display_box(message):
+    print(message)
+    pygame.display.set_caption("请直接输入式子，并按回车确认")
+    fontobject = pygame.font.SysFont("Ink Free", 25)
+    screen.blit(fontobject.render('Input:  ', 1, (47,79,79)),(15,620))
+    fontobject = pygame.font.SysFont("Segoe Script", 30)
+    '''
+    pygame.draw.rect(screen, (245,255,250),
+                    (15,720,300,30), 0)
+    pygame.draw.rect(screen, (47,79,79),
+                    (15-2,720-2,304,34), 1)
+    '''
+    if len(message) != 0:
+        screen.blit(fontobject.render(message, 1, (25,25,112)),(20,650))
 
+def check():
+    global current_string
+    global num
+    num0=[]
+    for i in current_string:
+        if i>='0' and i<='9':
+            num0.append(int(i))
+    print(num)
+    print(num0)
+    
+    if len(num0)!=len(num):
+        return None
+    if set(num0)!=set(num):
+        return None
+    ans="".join(current_string)
+    op= ['+','-','/','*']
+    if ans[0] in op or ans[0]==')' or ans[-1] in op or ans[-1]=='(':
+        return None
+    l=len(current_string)
+    for i in range(l-1):
+        if ans[i] in op and ans[i+1] in op:
+            return None
+    ans=eval(ans)
+    print(ans)
+    return ans
 
 def role_change():
     global role
@@ -134,14 +176,17 @@ def draw():
     global mode
     global pre_space
     global pre_chess
-    
+    global input_flag
+    global current_string
+
     final_text2 = "Blue final score is:  " + str(blue_sum)
     final_text1 = "Red final score is:  " + str(red_sum)
     font = pygame.font.SysFont("Ink Free", 30)
     ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
     ft2_surf = font.render(final_text2, 1, (65,105,225))      
     screen.blit(background, area)
-
+    if input_flag==1:
+        display_box("".join(current_string))
     if game_end:
         screen.blit(ft2_surf, (70,210))  
         screen.blit(ft1_surf, (520,210))
@@ -152,7 +197,8 @@ def draw():
         screen.blit(select_image,chess_pos[pre_chess[0]][pre_chess[1]])
     if select_chess !=None:
         screen.blit(select_image,chess_pos[select_chess[0]][select_chess[1]])
-    pygame.display.set_caption("国际数棋")
+    if input_flag==0:
+        pygame.display.set_caption("国际数棋")
     #棋子初始坐标
     dd=160
     ss=28
@@ -298,6 +344,7 @@ def removable(x,y,select_chess):
     global flag
     global role
     global ans
+    global num
     d=54
     
     #dd=170
@@ -329,6 +376,7 @@ def removable(x,y,select_chess):
                     if flag[i][j]==-1:
                         if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
                             return i,j
+    
 
     #单跨
     for i in range(15):
@@ -336,6 +384,9 @@ def removable(x,y,select_chess):
             if flag[i][j]==-1:
                 if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
                 #选择到一个空格
+                    if mode=='p2p' or (mode=='ai' and role=='blue'):
+                        global input_flag
+                        input_flag=1
                     num=[]
                     #左斜.
                     if i+j==xx+yy:
@@ -387,12 +438,12 @@ def removable(x,y,select_chess):
                     for each in range(num_len):
                         if num[each]>9:
                             num[each]=num[each]-10
+                    '''
                     ans=dfs(num,[],flag[xx][yy])
                     print(ans)
                     if ans!=[]:
                         return i,j
-                    
-                    
+                    '''
     return None
 
 times=[0 for i in range(10)]
@@ -431,8 +482,6 @@ def left_line(xx,yy):
                     jjj=xx+yy-iii
                     if flag[iii][jjj]>-1:
                         num.append(flag[iii][jjj])
-            if num==[]:
-                break
             num_len=len(num)
             for each in range(num_len):
                 if num[each]>9:
@@ -452,7 +501,6 @@ def right_line(xx,yy):
         j=i-xx+yy
         if flag[i][j]==-1:
         #(i,j)为空格的位置
-            print(i,j)
             num=[]
             ii=i+1
             jj=j+1
@@ -461,8 +509,6 @@ def right_line(xx,yy):
                     jjj=yy-xx+iii
                     if flag[iii][jjj]>-1:
                         num.append(flag[iii][jjj])
-            if num==[]:
-                break
             num_len=len(num)
             for each in range(num_len):
                 if num[each]>9:
@@ -536,12 +582,13 @@ def ai():
     
     for kk in range(10):
         it=value.index(max(value))
-        print(value) 
+        print(it) 
         #it为当前尝试移动棋子编号，红色棋子>9
         xx=cc[it][0]
         yy=cc[it][1]
         q=[0,1,2,3]
         random.shuffle(q)
+        print(q)
         for each in q:
             if each==0:
                 if left_line(xx,yy):
@@ -559,24 +606,112 @@ def ai():
 
 if __name__ == '__main__':
     draw()
+    pygame.display.flip() 
     dd=160
     ss=28
     h=145
     xx=150
     yy=50
-    
+    pre_key=None
     while True:  # 死循环确保窗口一直显示
-        for e in pygame.event.get():  # 遍历所有事件
+        for e in pygame.event.get():
             if e.type == pygame.QUIT:  # 如果单击关闭窗口，则退出
                 sys.exit()
-                
             # 按Esc则退出游戏
             elif e.type == pygame.KEYDOWN:
-                if e.key == pygame.K_ESCAPE:
+                inkey=e.key
+                if inkey == pygame.K_ESCAPE:
                     sys.exit()
-                    
+                elif input_flag==1:
+                    if inkey == pygame.K_BACKSPACE:
+                        current_string = current_string[0:-1]
+                    elif e.unicode== '\r':
+                        selected=removable(x,y,select_chess)
+                        if len(num)<2:
+                            continue
+                        correct=check()
+                        ii,jj=select_chess
+                        if correct==None:
+                            print('Input Error!')
+                        elif correct!=flag[ii][jj]%10:
+                            print('Wrong! Please input again')
+                        else:
+                            print('本次点击点击到了可移动的空格')
+                            fflag=0
+                            print(x,y)
+                            d=54
+                            for i in range(15):
+                                for j in range(15):
+                                    if flag[i][j]==-1:
+                                        print(chess_pos[i][j])
+                                        if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
+                                            fflag=1
+                                            x,y=i,j
+                                            
+                                            break
+                                if fflag==1:
+                         
+                                    break
+                            flag[x][y]=copy.deepcopy(flag[ii][jj])
+                            flag[ii][jj]=-1
+                            pre_space=x,y
+                            pre_chess=ii,jj
+                            selected=None
+                            select_chess = None
+                            role_change()
+                            current_string = []
+                            input_flag=0
+                  
+                    elif inkey == pygame.K_KP_MINUS or inkey == pygame.K_MINUS:
+                        current_string.append("-")
+                    elif inkey == pygame.K_KP_PLUS or inkey == pygame.K_PLUS:
+                        current_string.append("+")
+                    elif inkey == pygame.K_KP_MULTIPLY or inkey == pygame.K_ASTERISK:
+                        current_string.append("*")
+                    elif inkey == pygame.K_KP_DIVIDE or inkey == pygame.K_SLASH:
+                        current_string.append("/")
+                        
+                    elif e.key==pygame.K_9:
+                        if pre_key==42:
+                            current_string.append("(")
+                        else :current_string.append("9")
+                    elif e.key == pygame.K_0:
+                        if pre_key==42:
+                            current_string.append(")")
+                        else :current_string.append("0")
+                    elif e.key == pygame.K_EQUALS:
+                        if pre_key==42:
+                            current_string.append("+")
+                    elif e.key== pygame.K_8:
+                        if pre_key==42:
+                            current_string.append("*")
+                        else :current_string.append("8")
+                        
+                    elif inkey>=48 and inkey<=57:
+                        current_string.append(chr(inkey))
+                    elif inkey==pygame.K_KP0:
+                        current_string.append('0')
+                    elif inkey==pygame.K_KP1:
+                        current_string.append('1')
+                    elif inkey==pygame.K_KP2:
+                        current_string.append('2')
+                    elif inkey==pygame.K_KP3:
+                        current_string.append('3')
+                    elif inkey==pygame.K_KP4:
+                        current_string.append('4')
+                    elif inkey==pygame.K_KP5:
+                        current_string.append('5')
+                    elif inkey==pygame.K_KP6:
+                        current_string.append('6')
+                    elif inkey==pygame.K_KP7:
+                        current_string.append('7')
+                    elif inkey==pygame.K_KP8:
+                        current_string.append('8')
+                    elif inkey==pygame.K_KP9:
+                        current_string.append('9')
+                pre_key=e.scancode
             elif (role=='red' and mode=='ai' and ok==1):
-                    pygame.time.delay(2000)
+                    #pygame.time.delay(2000)
                     ai()
                     last_moment=1
                     ok=0
@@ -642,7 +777,7 @@ if __name__ == '__main__':
                             print(selected)
                             select_chess=copy.deepcopy(selected)
 
-                    elif select_chess != None:
+                    elif select_chess != None and input_flag==0:
                         selected=removable(x,y,select_chess)
                         if selected is not None:
                             print('本次点击点击到了可移动的空格')
@@ -656,7 +791,9 @@ if __name__ == '__main__':
                             selected=None
                             select_chess = None
                             role_change()
-                
+                        
+                        elif input_flag==1:
+                            pass
 
             draw()
             pygame.display.flip()  # 更新全部显示
