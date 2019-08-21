@@ -4,6 +4,33 @@ from math import *
 import itertools
 import copy
 import random
+import socket
+import threading
+import threading
+import json
+
+class Config:
+	SOCKET_HOST = '127.0.0.1'	# Symbolic name meaning all available interfaces
+	SOCKET_PORT = 50005	# Arbitrary non-privileged port
+	MAX_WAITING_TIME = 1800
+	MAX_THNIKING_TIME = 600
+	MAX_TOTAL_TIME = 6000
+
+def client(ip, port, message):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((ip, port))
+
+    try:
+        
+        sock.sendall(message.encode("utf-8"))
+        print ("Send: {}".format(message))
+        response = sock.recv(1024)
+        print(response)
+        jresp = json.loads(response.decode('utf-8'))
+        print ("Recv: ",jresp)
+
+    finally:
+        sock.close()
 
 num=[]
 input_flag=0
@@ -617,6 +644,7 @@ if __name__ == '__main__':
         for e in pygame.event.get():
             if e.type == pygame.QUIT:  # 如果单击关闭窗口，则退出
                 sys.exit()
+                pygame.quit()
             # 按Esc则退出游戏
             elif e.type == pygame.KEYDOWN:
                 inkey=e.key
@@ -626,6 +654,7 @@ if __name__ == '__main__':
                     if inkey == pygame.K_BACKSPACE:
                         current_string = current_string[0:-1]
                     elif e.unicode== '\r':
+                        print(x,y,select_chess)
                         selected=removable(x,y,select_chess)
                         if len(num)<2:
                             continue
@@ -672,18 +701,18 @@ if __name__ == '__main__':
                         current_string.append("/")
                         
                     elif e.key==pygame.K_9:
-                        if pre_key==42:
+                        if pre_key==42 or pre_key==54:
                             current_string.append("(")
                         else :current_string.append("9")
                     elif e.key == pygame.K_0:
-                        if pre_key==42:
+                        if pre_key==42 or pre_key==54:
                             current_string.append(")")
                         else :current_string.append("0")
                     elif e.key == pygame.K_EQUALS:
-                        if pre_key==42:
+                        if pre_key==42 or pre_key==54:
                             current_string.append("+")
                     elif e.key== pygame.K_8:
-                        if pre_key==42:
+                        if pre_key==42 or pre_key==54:
                             current_string.append("*")
                         else :current_string.append("8")
                         
@@ -727,6 +756,13 @@ if __name__ == '__main__':
                 elif x in range(ss,ss+xx) and y in range(h+3,h+3+yy) :
                     print('网络模式')
                     mode = 'net'
+                    msg_0 ={ "type": 0,"msg": {"name": "alpc"}}
+                    jmsg = json.dumps(msg_0)
+                    th = threading.Thread(target=client(Config.SOCKET_HOST, Config.SOCKET_PORT, jmsg), args=( "Thread-1",))
+                    print('over')
+                    th.start()
+                    print('over')
+
                 elif x in range(ss+dd,ss+dd+xx) and y in range(h,h+yy) :
                     print('人机模式')
                     mode = 'ai'
