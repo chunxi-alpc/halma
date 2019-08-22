@@ -1,14 +1,56 @@
-import pygame 
+# coding:utf-8
+#client
+from socket import *
 import sys
+import json
+import uuid 
+import time 
+from threading import Thread, Lock
+import pygame 
 from math import *
 import itertools
 import copy
 import random
 
+serverName = "192.168.43.226"
+serverPort =50005
+
+def apply_for_join_game(name_):
+        applying = {"type":0,
+                            "msg":{
+                                    "name":name_
+                            }
+                }
+        return applying
+
+def send_msg_to(client,msg):
+	packet = json.dumps(msg)
+	if (sys.version[:1] == "3"):
+		packet = packet.encode('utf-8')
+	#print(client.addr[0] + ":" + str(client.addr[1]) + "\t" + str(msg))
+	#client.conn.send(packet)
+	client.send(packet)
+ 
+	
+addr = serverName,serverPort
+name = 'John'#'Mary'
+side = -1
+time = -1
+total = -1
+gameid = None
+gameside = -1
+clientSocket = None
+net_flag = -1
+request = None
+
+#开始游戏
+
 num=[]
 input_flag=0
 current_string = []
 ok=0
+
+
 last_moment=0
 pre_space=None
 pre_chess=None
@@ -50,15 +92,7 @@ for i in range(8):
     for j in range(8):
         chess_pos[i+7-j][i+j]=chess0[i][j]
 
-'''
-flag = [[-2]*15 for i in range(15) ]
-for i in range(15):
-    for j in range(15):
-        if  i+j>6 and i+j<22 and (i+j) % 2==1 and i-j>=-7 and i-j<=7 :
-            flag[i][j]=-1
-for i in range(15):
-    print(flag[i]) 
-'''
+
 flag=[[-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2],
 [-2, -2, -2, -2, -2, -2, -1, -2, -1, -2, -2, -2, -2, -2, -2],
 [-2, -2, -2, -2, -2, -1, -2, -1, -2, -1, -2, -2, -2, -2, -2],
@@ -115,7 +149,7 @@ sound_move = pygame.mixer.Sound("./sound/move.wav")
 area= background.get_rect()  # 获取矩形区域
 
 def display_box(message):
-    print(message)
+    #print(message)
     pygame.display.set_caption("请直接输入式子，并按回车确认")
     fontobject = pygame.font.SysFont("Ink Free", 25)
     screen.blit(fontobject.render('Input:  ', 1, (47,79,79)),(15,620))
@@ -128,7 +162,7 @@ def display_box(message):
     '''
     if len(message) != 0:
         screen.blit(fontobject.render(message, 1, (25,25,112)),(20,650))
-
+up_load_string = None#存储要传给服务器的式子
 def check():
     global current_string
     global num
@@ -151,6 +185,7 @@ def check():
     for i in range(l-1):
         if ans[i] in op and ans[i+1] in op:
             return None
+    up_load_string =ans
     ans=eval(ans)
     print(ans)
     return ans
@@ -178,7 +213,7 @@ def draw():
     global pre_chess
     global input_flag
     global current_string
-
+    
     final_text2 = "Blue final score is:  " + str(blue_sum)
     final_text1 = "Red final score is:  " + str(red_sum)
     font = pygame.font.SysFont("Ink Free", 30)
@@ -446,6 +481,7 @@ def removable(x,y,select_chess):
                     '''
     return None
 
+
 times=[0 for i in range(10)]
 
 #默认red为电脑方
@@ -604,6 +640,7 @@ def ai():
                     return
         value[it]=-99999
 
+
 if __name__ == '__main__':
     draw()
     pygame.display.flip() 
@@ -614,9 +651,10 @@ if __name__ == '__main__':
     yy=50
     pre_key=None
     while True:  # 死循环确保窗口一直显示
-        for e in pygame.event.get():
+        for e in pygame.event.get():  # 遍历所有事件
             if e.type == pygame.QUIT:  # 如果单击关闭窗口，则退出
                 sys.exit()
+                pygame.quit()
             # 按Esc则退出游戏
             elif e.type == pygame.KEYDOWN:
                 inkey=e.key
@@ -626,6 +664,7 @@ if __name__ == '__main__':
                     if inkey == pygame.K_BACKSPACE:
                         current_string = current_string[0:-1]
                     elif e.unicode== '\r':
+                        print(x,y,select_chess)
                         selected=removable(x,y,select_chess)
                         if len(num)<2:
                             continue
@@ -672,18 +711,18 @@ if __name__ == '__main__':
                         current_string.append("/")
                         
                     elif e.key==pygame.K_9:
-                        if pre_key==42:
+                        if pre_key==42 or pre_key==54:
                             current_string.append("(")
                         else :current_string.append("9")
                     elif e.key == pygame.K_0:
-                        if pre_key==42:
+                        if pre_key==42 or pre_key==54:
                             current_string.append(")")
                         else :current_string.append("0")
                     elif e.key == pygame.K_EQUALS:
-                        if pre_key==42:
+                        if pre_key==42 or pre_key==54:
                             current_string.append("+")
                     elif e.key== pygame.K_8:
-                        if pre_key==42:
+                        if pre_key==42 or pre_key==54:
                             current_string.append("*")
                         else :current_string.append("8")
                         
@@ -726,7 +765,22 @@ if __name__ == '__main__':
                     mode = 'p2p'
                 elif x in range(ss,ss+xx) and y in range(h+3,h+3+yy) :
                     print('网络模式')
+                    #匹配玩家
+                    clientSocket=socket(AF_INET,SOCK_STREAM)
+                    clientSocket.connect((serverName,serverPort))
+                    applying_ = apply_for_join_game(name)
+                    send_msg_to(clientSocket,applying_)
+                    mes = clientSocket.recv(1024)
+                    print("已和下列玩家匹配：")
+                    print(mes)
+                    new_mes = json.loads(mes)
+                    gameid =new_mes["game_id"]
+                    gameside =new_mes["side"]
+                    time = new_mes["think_time"]
+                    total = new_mes["total_time"]
                     mode = 'net'
+                    net_flag=gameside
+                                
                 elif x in range(ss+dd,ss+dd+xx) and y in range(h,h+yy) :
                     print('人机模式')
                     mode = 'ai'
@@ -751,8 +805,19 @@ if __name__ == '__main__':
                     re_chess=None
                     flag=weight
                     break
-                elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) :
+                elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) or request == "stop":
                     print('算分叫停')
+                    if mode=='net':
+                            if net_flag == gameside:
+                                    ms = {
+                                        "type": 2,
+                                        "msg": {
+                                        "request": "stop",
+                                        "game_id":gameid,
+                                        "side": gameside } 
+                                      }
+                                    send_msg_to(clientSocket,ms)
+                                                      
                     game_end=True
                     blue_sum=0
                     for i in range(11,15):
@@ -768,6 +833,7 @@ if __name__ == '__main__':
                                 print(weight[j][i],flag[j][i])
                     print(blue_sum)
                     print(red_sum)
+                
                 elif mode=='p2p' or (role=='blue' and mode=='ai'):
                     selected = is_chess_clicked(x,y)
                     if selected is not None:
@@ -777,7 +843,7 @@ if __name__ == '__main__':
                             print(selected)
                             select_chess=copy.deepcopy(selected)
 
-                    elif select_chess != None and input_flag==0:
+                    elif select_chess != None:
                         selected=removable(x,y,select_chess)
                         if selected is not None:
                             print('本次点击点击到了可移动的空格')
@@ -791,12 +857,74 @@ if __name__ == '__main__':
                             selected=None
                             select_chess = None
                             role_change()
-                        
-                        elif input_flag==1:
-                            pass
+                elif mode =='net':
+                        if net_flag == 0:
+                                selected = is_chess_clicked(x,y)
+                                if selected is not None:
+                                    print('本次点击点击到了棋子')
+                                    ans=[]
+                                    last_moment=0
+                                    print(selected)
+                                    select_chess=copy.deepcopy(selected)
+                                elif select_chess != None:
+                                        selected=removable(x,y,select_chess)
+                                        if selected is not None:
+                                            print('本次点击点击到了可移动的空格')
+                                            print(selected)
+                                            i,j=selected#选中空格的坐标
+                                            ii,jj=select_chess#选中棋子的坐标
+                                            flag[i][j]=copy.deepcopy(flag[ii][jj])
+                                            flag[ii][jj]=-1
+                                            pre_space=selected
+                                            pre_chess=select_chess
+                                            selected=None
+                                            select_chess = None
+                                            ms = {
+                                                                "type": 1,
+                                                                "msg":{
+                                                                                "game_id":gameid,
+                                                                                "side": gameside,
+                                                                                "num":  flag[i][j],
+                                                                         "src": {
+                                                                                                "x": ii,
+                                                                                                "y": jj
+                                                                                                },
+                                                                                "dst":{
+                                                                                                "x": i,
+                                                                                                "y": j
+                                                                                         },
+                                                                                 "exp": up_load_string
+                                                                                }
+                                                        }
+                                            send_msg_to(clientSocket,ms)
+                                            net_flag = 1
+                                            role_change()
+                        else:
+                                mes = clientSocket.recv(1024)
+                                #print(mes)
+                                new_mes = json.loads(mes)
+                                i,j = new_mes["dst"]["x"],new_mes["dst"]["y"]
+                                ii,jj = new_mes["src"]["x"],new_mes["src"]["y"]
+
+                                flag[i][j]=copy.deepcopy(flag[ii][jj])
+                                flag[ii][jj]=-1
+                                pre_space=selected
+                                pre_chess=select_chess
+                                selected=None
+                                select_chess = None
+                                net_flag = 0
+                                role_change()
+                                            
 
             draw()
             pygame.display.flip()  # 更新全部显示
             
     quit()  # 退出pygame
 
+
+
+#print(mes)
+
+clientSocket.close() 
+        
+        
