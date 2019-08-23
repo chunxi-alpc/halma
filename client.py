@@ -12,7 +12,7 @@ import itertools
 import copy
 import random
 
-serverName = '127.0.0.1'
+serverName = '192.168.43.90'
 serverPort =50005
 
 
@@ -64,7 +64,7 @@ red_sum=0
 ans=[]     
 game_end=False            
 mode = 'p2p'
-role='blue'
+role='red'
 select_chess = None
 selected=None
 chess_pos =[[0]*15 for i in range(15)]
@@ -158,12 +158,6 @@ def display_box(message):
     fontobject = pygame.font.SysFont("Ink Free", 25)
     screen.blit(fontobject.render('Input:  ', 1, (47,79,79)),(15,620))
     fontobject = pygame.font.SysFont("Segoe Script", 30)
-    '''
-    pygame.draw.rect(screen, (245,255,250),
-                    (15,720,300,30), 0)
-    pygame.draw.rect(screen, (47,79,79),
-                    (15-2,720-2,304,34), 1)
-    '''
     if len(message) != 0:
         screen.blit(fontobject.render(message, 1, (25,25,112)),(20,650))
 
@@ -216,14 +210,18 @@ def draw():
     global pre_chess
     global input_flag
     global current_string
-    
-    final_text2 = "Blue final score is:  " + str(blue_sum)
-    final_text1 = "Red final score is:  " + str(red_sum)
+    global gameside
+    if net_flag ==0:
+        pygame.display.set_caption("该方先出!")
+    elif input_flag==0 :
+        pygame.display.set_caption("国际数棋")
+    final_text2 = "blue final score is:  " + str(blue_sum)
+    final_text1 = "red final score is:  " + str(red_sum)
     font = pygame.font.SysFont("Ink Free", 30)
     ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
     ft2_surf = font.render(final_text2, 1, (65,105,225))      
     screen.blit(background, area)
-    if input_flag==1 and net_flag ==gameside:
+    if input_flag==1 and (net_flag ==0 or mode!='net'):
         display_box("".join(current_string))
     if game_end:
         screen.blit(ft2_surf, (70,210))  
@@ -235,8 +233,7 @@ def draw():
         screen.blit(select_image,chess_pos[pre_chess[0]][pre_chess[1]])
     if select_chess !=None:
         screen.blit(select_image,chess_pos[select_chess[0]][select_chess[1]])
-    if input_flag==0:
-        pygame.display.set_caption("国际数棋")
+    
     #棋子初始坐标
     dd=160
     ss=28
@@ -280,8 +277,6 @@ def draw():
     screen.blit(ft0, (ss+dd ,h+20))
     ft0 = font.render("P2P Mode", 1, (0, 100, 0))            
     screen.blit(ft0, (ss+dd/2 ,h-20))
-    
-    
     screen.blit(repent_image, (ss+dd*2, h))
     screen.blit(restart_image, (ss+dd*3,h))
     screen.blit(quit_image, (ss+dd*4,h+7))
@@ -790,9 +785,7 @@ if __name__ == '__main__':
                     time = new_mes["think_time"]
                     total = new_mes["total_time"]
                     mode = 'net'
-                    net_flag=gameside
-                    if gameside ==0:
-                            pygame.display.set_caption("you fisrt !")
+                    net_flag=copy.deepcopy(gameside)
                                 
                 elif x in range(ss+dd,ss+dd+xx) and y in range(h,h+yy) :
                     print('人机模式')
@@ -821,7 +814,7 @@ if __name__ == '__main__':
                 elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) or request == "stop":
                     print('算分叫停')
                     if mode=='net':
-                            if net_flag == gameside:
+                            if net_flag == 0:
                                     ms = {
                                         "type": 2,
                                         "msg": {
