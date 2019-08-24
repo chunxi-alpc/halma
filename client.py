@@ -12,7 +12,7 @@ import itertools
 import copy
 import random
 
-serverName = '192.168.43.90'
+serverName = '127.0.0.1'
 serverPort =50005
 
 
@@ -53,14 +53,13 @@ num=[]
 input_flag=0
 current_string = []
 ok=0
-
-
 last_moment=0
 pre_space=None
 pre_chess=None
 pygame.font.init()
 blue_sum=0
 red_sum=0
+score_flag=0
 ans=[]     
 game_end=False            
 mode = 'p2p'
@@ -211,18 +210,25 @@ def draw():
     global input_flag
     global current_string
     global gameside
+    
     if net_flag ==0:
-        pygame.display.set_caption("该方先出!")
+        pygame.display.set_caption("轮到该方出棋!")
+    elif score_flag==1:
+        pygame.display.set_caption("叫停无效")
     elif input_flag==0 :
         pygame.display.set_caption("国际数棋")
+    elif mode=='ai' and role=='blue':
+        screen.blit(ok_sign, (130,666))
+        pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
+    elif input_flag==1 and (net_flag ==0 or mode!='net'):
+        display_box("".join(current_string))
     final_text2 = "blue final score is:  " + str(blue_sum)
     final_text1 = "red final score is:  " + str(red_sum)
     font = pygame.font.SysFont("Ink Free", 30)
     ft1_surf = font.render(final_text1, 1, (220, 20, 60))                                                 
     ft2_surf = font.render(final_text2, 1, (65,105,225))      
     screen.blit(background, area)
-    if input_flag==1 and (net_flag ==0 or mode!='net'):
-        display_box("".join(current_string))
+    
     if game_end:
         screen.blit(ft2_surf, (70,210))  
         screen.blit(ft1_surf, (520,210))
@@ -260,9 +266,6 @@ def draw():
                 screen.blit(ft2_surf, (20,hh))
                 hh+=30
         
-        if mode == 'ai':
-            screen.blit(ok_sign, (130,666))
-            pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
     if mode=='p2p':
         screen.blit(mode_select_image, (ss+dd/2-15 ,h-20-8))
     elif mode=='ai':
@@ -378,6 +381,7 @@ def removable(x,y,select_chess):
     global role
     global ans
     global num
+    global input_flag
     d=54
     
     #dd=170
@@ -393,7 +397,8 @@ def removable(x,y,select_chess):
         j=xy[1]
         if i>=0 and i<=14 and j>=0 and j<=14:
             if flag[i][j]==-1:
-                if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
+                if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :
+                    input_flag=0
                     return i,j
     #邻
     for xy in dxy:
@@ -407,7 +412,8 @@ def removable(x,y,select_chess):
                 j=dy+j
                 if i>=0 and i<=14 and j>=0 and j<=14:
                     if flag[i][j]==-1:
-                        if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
+                        if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :
+                            input_flag=0
                             return i,j
     
 
@@ -417,9 +423,6 @@ def removable(x,y,select_chess):
             if flag[i][j]==-1:
                 if x>chess_pos[i][j][0] and x<chess_pos[i][j][0]+d and y>chess_pos[i][j][1] and y<chess_pos[i][j][1]+d :        
                 #选择到一个空格
-                    if mode=='p2p' or (mode=='ai' and role=='blue') or mode == 'net':
-                        global input_flag
-                        input_flag=1
                     num=[]
                     #左斜.
                     if i+j==xx+yy:
@@ -463,6 +466,8 @@ def removable(x,y,select_chess):
                         break
                     if num==[]:
                         break
+                    if mode=='p2p' or (mode=='ai' and role=='blue') or mode == 'net':
+                        input_flag=1
                     if flag[xx][yy] in num:
                         num.remove(flag[xx][yy])
                     #确保空格旁边有棋子
@@ -790,6 +795,7 @@ if __name__ == '__main__':
                 elif x in range(ss+dd,ss+dd+xx) and y in range(h,h+yy) :
                     print('人机模式')
                     mode = 'ai'
+                    role='blue'
                 elif x in range(ss+dd*2,ss+dd*2+xx) and y in range(h,h+yy) :
                     print('悔棋')
                     game_end=False
@@ -813,6 +819,19 @@ if __name__ == '__main__':
                     break
                 elif x in range(ss+dd*4,ss+dd*4+xx) and y in range(h,h+yy) or request == "stop":
                     print('算分叫停')
+                    if role=='red':
+                            for i in range(0,4):
+                                    for j in range(4,11):
+                                            if flag[j][i]==-1:
+                                                    score_flag=1
+                                                    break        
+                    else:
+                            for i in range(11,15):
+                                    for j in range(4,11):
+                                            if flag[j][i]==-1:
+                                                    score_flag=1
+                                                    break
+                 
                     if mode=='net':
                             if net_flag == 0:
                                     ms = {
@@ -823,22 +842,22 @@ if __name__ == '__main__':
                                         "side": gameside } 
                                       }
                                     send_msg_to(clientSocket,ms)
-                                                      
-                    game_end=True
-                    blue_sum=0
-                    for i in range(11,15):
-                        for j in range(4,11):
-                            if flag[j][i]>0 and flag[j][i]<10:
-                                blue_sum+=(weight[j][i]-10)*flag[j][i]
-                                print(weight[j][i],flag[j][i])
-                    red_sum=0
-                    for i in range(0,4):
-                        for j in range(4,11):
-                            if flag[j][i]>9 :
-                                red_sum+=weight[j][i]*(flag[j][i]-10)
-                                print(weight[j][i],flag[j][i])
-                    print(blue_sum)
-                    print(red_sum)
+                    if score_flag==0:
+                            game_end=True
+                            blue_sum=0
+                            for i in range(11,15):
+                                for j in range(4,11):
+                                    if flag[j][i]>0 and flag[j][i]<10:
+                                        blue_sum+=(weight[j][i]-10)*flag[j][i]
+                                        print(weight[j][i],flag[j][i])
+                            red_sum=0
+                            for i in range(0,4):
+                                for j in range(4,11):
+                                    if flag[j][i]>9 :
+                                        red_sum+=weight[j][i]*(flag[j][i]-10)
+                                        print(weight[j][i],flag[j][i])
+                            print(blue_sum)
+                            print(red_sum)
                 
                 elif mode=='p2p' or (role=='blue' and mode=='ai'):
                     selected = is_chess_clicked(x,y)
@@ -930,5 +949,3 @@ if __name__ == '__main__':
 #print(mes)
 
 clientSocket.close() 
-        
-        
