@@ -12,19 +12,20 @@ import itertools
 import copy
 import random
 
-serverName = '127.0.0.1'
+ip = '127.0.0.1'
 serverPort = 50005
-
+serveraddr = ip, serverPort
+clientPort = 980
+clientaddr = ip,clientPort
+name = 'Lucy'
 
 if(sys.version[:1] == "3"):
-	import queue as Queue
-	from _thread import *
+    import queue as Queue
+    from _thread import *
 else:
-	import Queue
-	from thread import *
+    import Queue
+    from thread import *
 
-addr = serverName, serverPort
-name = 'John'
 side = -1
 time = -1
 total = -1
@@ -32,10 +33,10 @@ gameid = None
 gameside = -1
 clientSocket = None
 net_flag = -1
-quit_flag_1=-1
-quit_flag_2=-1
+quit_flag_1 = -1
+quit_flag_2 = -1
 msg_type = -1
-expression=''
+expression = ''
 
 # 开始游戏
 num = []
@@ -155,19 +156,27 @@ def display_box(message):
 
 def check():
     global current_string
-    global num,expression
+    global num, expression
     num0 = []
     for i in current_string:
         if i >= '0' and i <= '9':
             num0.append(int(i))
-    print(num)
-    print(num0)
-
     if len(num0) != len(num):
         return None
     if set(num0) != set(num):
         return None
     ans = "".join(current_string)
+    bracket_should_be = '('
+    for i in range(len(num)):
+        if num[i] == '(' or num[i] == ')':
+            if num[i] != bracket_should_be:
+                return None
+            elif bracket_should_be == '(':
+                bracket_should_be = ')'
+            else:
+                bracket_should_be = '('
+    if bracket_should_be!='(':
+            return None
     op = ['+', '-', '/', '*']
     if ans[0] in op or ans[0] == ')' or ans[-1] in op or ans[-1] == '(':
         return None
@@ -177,7 +186,6 @@ def check():
             return None
     expression = ans
     ans = eval(ans)
-    print(ans)
     return ans
 
 
@@ -213,19 +221,24 @@ def draw():
     ft1_surf = font.render(final_text1, 1, (220, 20, 60))
     ft2_surf = font.render(final_text2, 1, (65, 105, 225))
     screen.blit(background, area)
-    if net_flag == 0:
-        pygame.display.set_caption("轮到该方出棋!")
-    elif mode == 'ai' and role == 'red':
+    pygame.display.set_caption("国际数棋")
+    if mode == 'net' :
+        if net_flag == 0 :
+                pygame.display.set_caption("轮到该方出棋!")
+        elif input_flag == 0:
+                pygame.display.set_caption("国际数棋")
+        if quit_flag_1 == 1:
+                pygame.display.set_caption("主动退出，你输了!")
+        elif quit_flag_2 == 2:
+                pygame.display.set_caption("对方主动退出，你赢了!")
+                
+    if mode == 'ai' and role == 'red':
         screen.blit(ok_sign, (130, 666))
         pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
-    elif input_flag == 1 and (net_flag == 0 or mode != 'net'):
+        
+    if input_flag == 1 and (net_flag == 0 or mode != 'net'):
         display_box("".join(current_string))
-    elif quit_flag_1 ==1:
-        pygame.display.set_caption("主动退出，你输了!")
-    elif quit_flag_2 ==2:
-        pygame.display.set_caption("对方主动退出，你赢了!")
-    elif input_flag == 0:
-        pygame.display.set_caption("国际数棋")
+        
     if game_end:
         screen.blit(ft2_surf, (70, 210))
         screen.blit(ft1_surf, (520, 210))
@@ -384,11 +397,8 @@ def removable(x, y, select_chess):
     global input_flag
     d = 54
 
-    # dd=170
     # 被移动棋子的坐标
     xx, yy = select_chess
-   # if (x-chess_pos[xx][yy][0])*(x-chess_pos[xx][yy][0])+(y-chess_pos[xx][yy][1])*(y-chess_pos[xx][yy][1])>dd*dd:
-    #   return None
 
     # 移
     dxy = [(xx-1, yy-1), (xx-2, yy), (xx+1, yy-1),
@@ -678,7 +688,7 @@ def receive_msg_1(new_mes):
     global time
     global total
     global net_flag
-    print("已和下列玩家匹配：",new_mes)
+    print("已和下列玩家匹配：", new_mes)
     gameid = new_mes['game_id']
     gameside = new_mes['side']
     time = new_mes['think_time']
@@ -686,10 +696,11 @@ def receive_msg_1(new_mes):
     net_flag = 0
     mode = 'net'
     net_flag = copy.deepcopy(gameside)
-    
+
+
 def receive_msg_2(new_mes):
     global flag
-    global pre_space,pre_chess,selected,select_chess
+    global pre_space, pre_chess, selected, select_chess
     global net_flag
     i, j = new_mes['dst']['x'], new_mes['dst']['y']
     ii, jj = new_mes['src']['x'], new_mes['src']['y']
@@ -706,58 +717,55 @@ def receive_msg_2(new_mes):
 
 def receive_msg_3():
     global game_end
-    global blue_sum,red_sum
+    global blue_sum, red_sum
     game_end = True
     blue_sum = 0
     for i in range(11, 15):
         for j in range(4, 11):
             if flag[j][i] > 0 and flag[j][i] < 10:
                 blue_sum += (weight[j][i]-10)*flag[j][i]
-                print(weight[j][i], flag[j][i])
+
     red_sum = 0
     for i in range(0, 4):
         for j in range(4, 11):
             if flag[j][i] > 9:
                 red_sum += weight[j][i]*(flag[j][i]-10)
-                print(weight[j][i], flag[j][i])
-   #print(blue_sum)
-   #print(red_sum)
+
+   # print(blue_sum)
+   # print(red_sum)
+
 
 def receive_msg_4():
     global quit_flag_2
-    msg={"type": 3,"side": gameside}
+    msg = {"type": 3, "side": gameside}
     send_msg_to(client, msg)
-    quit_flag_2==1
+    quit_flag_2 == 1
     sys.exit()
     pygame.quit()
 
-def client_thread(conn,addr):
-        while True:
-                data = conn.recv(1024)
-                if not data:
-                    break
-                print("收到的初始消息为：",data)
-                data = json.loads(data)
-                print("解压后消息为：",data)
-                if not 'status'in data:
-                        receive_msg_2(data)
-                        continue
-                elif data['status'] ==1:
-                        receive_msg_1(data)
-                        continue
-                elif "exp" in  data:
-                        receive_msg_2(data)
-                        continue
-                elif data['status'] == 2 and data['request']=="stop":
-                        receive_msg_3()
-                        continue
-                elif data['status'] == 2 and data['request']=="quit":
-                        receive_msg_4()
-                        break
-                else:
-                        continue
-    #came out of loop
-        conn.close()
+
+def client_thread(conn, addr):
+    while True:
+        data = conn.recv(1024)
+        if not data:
+            break
+        print("收到的初始消息为：", data)
+        data = json.loads(data)
+        print("解压后消息为：", data)
+        if not 'status'in data:
+            receive_msg_2(data)
+        elif data['status'] == 1:
+            receive_msg_1(data)
+        elif "exp" in data:
+            receive_msg_2(data)
+        elif data['status'] == 2 and data['request'] == "stop":
+            receive_msg_3()
+        elif data['status'] == 2 and data['request'] == "quit":
+            receive_msg_4()
+            break
+
+    conn.close()
+
 
 if __name__ == '__main__':
     draw()
@@ -772,15 +780,15 @@ if __name__ == '__main__':
         for e in pygame.event.get():  # 遍历所有事件
             if e.type == pygame.QUIT:  # 如果单击关闭窗口，则退出
                 if mode == 'net':
-                    quit_flag_1=1
+                    quit_flag_1 = 1
                     ms = {
-                                        "type": 2,
-                                        "msg": {
-                                        "request": "quit",
-                                        "game_id":gameid,
-                                        "side": gameside } 
-                             }
-                    send_msg_to(clientSocket,ms) 
+                        "type": 2,
+                        "msg": {
+                            "request": "quit",
+                            "game_id": gameid,
+                            "side": gameside}
+                    }
+                    send_msg_to(clientSocket, ms)
                 sys.exit()
                 pygame.quit()
             # 按Esc则退出游戏
@@ -814,10 +822,8 @@ if __name__ == '__main__':
                                         if x > chess_pos[i][j][0] and x < chess_pos[i][j][0]+d and y > chess_pos[i][j][1] and y < chess_pos[i][j][1]+d:
                                             fflag = 1
                                             x, y = i, j
-
                                             break
                                 if fflag == 1:
-
                                     break
                             flag[x][y] = copy.deepcopy(flag[ii][jj])
                             flag[ii][jj] = -1
@@ -902,17 +908,17 @@ if __name__ == '__main__':
                     print('P2P模式')
                     mode = 'p2p'
                 elif x in range(ss, ss+xx) and y in range(h+3, h+3+yy):
-                    print('网络模式John')
+                    print('网络模式')
                     # 匹配玩家
                     clientSocket = socket(AF_INET, SOCK_STREAM)
-                    clientSocket.bind(("127.0.0.1",908))
-                    clientSocket.connect((serverName, serverPort))
+                    clientSocket.bind((clientaddr))
+                    clientSocket.connect((serveraddr))
                     applying_ = apply_for_join_game(name)
                     send_msg_to(clientSocket, applying_)
-                    start_new_thread(client_thread, (clientSocket, addr))
+                    start_new_thread(client_thread, (clientSocket, serveraddr))
                     #t = Thread(target=client_thread, args=(clientSocket,addr))
-                    #t.start()
-                    #t.join()
+                    # t.start()
+                    # t.join()
                 elif x in range(ss+dd, ss+dd+xx) and y in range(h, h+yy):
                     print('人机模式')
                     mode = 'ai'
@@ -940,50 +946,46 @@ if __name__ == '__main__':
                     break
                 elif x in range(ss+dd*4, ss+dd*4+xx) and y in range(h, h+yy):
                     print('算分叫停')
-                    for i in range(0,4):
-                        for j in range(4,11):
-                            if flag[j][i]==-1:
-                                red_score_flag+=1
-                       
-                    for i in range(11,15):
-                        for j in range(4,11):
-                            if flag[j][i]==-1:
-                                blue_score_flag+=1
-                    #print(red_score_flag,blue_score_flag)
-                
-                    if  red_score_flag==0 or blue_score_flag==0:
-                        if mode=='net':
+                    for i in range(0, 4):
+                        for j in range(4, 11):
+                            if flag[j][i] == -1:
+                                red_score_flag += 1
+
+                    for i in range(11, 15):
+                        for j in range(4, 11):
+                            if flag[j][i] == -1:
+                                blue_score_flag += 1
+                    # print(red_score_flag,blue_score_flag)
+
+                    if red_score_flag == 0 or blue_score_flag == 0:
+                        if mode == 'net':
                             if net_flag == 0:
-                                    ms = {
-                                        "type": 2,
-                                        "msg": {
+                                ms = {
+                                    "type": 2,
+                                    "msg": {
                                         "request": "stop",
-                                        "game_id":gameid,
-                                        "side": gameside } 
-                                      }
-                                    send_msg_to(clientSocket,ms)
-                                    net_flag = 1
-                                    
+                                        "game_id": gameid,
+                                        "side": gameside}
+                                }
+                                send_msg_to(clientSocket, ms)
+                                net_flag = 1
+
                         game_end = True
                         blue_sum = 0
                         for i in range(11, 15):
                             for j in range(4, 11):
                                 if flag[j][i] > 0 and flag[j][i] < 10:
                                     blue_sum += (weight[j][i]-10)*flag[j][i]
-                                    print(weight[j][i], flag[j][i])
+
                         red_sum = 0
                         for i in range(0, 4):
                             for j in range(4, 11):
                                 if flag[j][i] > 9:
                                     red_sum += weight[j][i]*(flag[j][i]-10)
-                                    print(weight[j][i], flag[j][i])
-                        print(blue_sum)
-                        print(red_sum)
+
                     else:
                         blue_score_flag = 0
                         red_score_flag = 0
-                    #print(red_score_flag,blue_score_flag)
-                    #print(red_score_flag)    
                 elif mode == 'p2p' or (role == 'blue' and mode == 'ai'):
                     selected = is_chess_clicked(x, y)
                     if selected is not None:
@@ -1008,6 +1010,7 @@ if __name__ == '__main__':
                             select_chess = None
                             role_change()
                 elif mode == 'net':
+                    print(input_flag)
                     if net_flag == 0:
                         selected = is_chess_clicked(x, y)
                         if selected is not None:
@@ -1050,15 +1053,11 @@ if __name__ == '__main__':
                                 net_flag = 1
                                 role_change()
                     #start_new_thread(client_thread, (clientSocket, addr))
-        
 
-            draw() 
+            draw()
             pygame.display.flip()  # 更新全部显示
 
     quit()  # 退出pygame
     #start_new_thread(draw_thread, ())
-
-
-# print(mes)
 
 clientSocket.close()
