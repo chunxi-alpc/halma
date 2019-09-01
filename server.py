@@ -206,7 +206,7 @@ def client_thread(conn, addr):
 		elif data['type'] == 3:
 			break
 		else:
-			#delivering message between the two clients
+                                                #delivering message between the two clients
 			transfer_message(data['msg'])	
 			continue	
 	#came out of loop

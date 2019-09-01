@@ -24,7 +24,7 @@ else:
 	from thread import *
 
 addr = serverName, serverPort
-name = 'John'
+name = 'Mary'
 side = -1
 time = -1
 total = -1
@@ -155,7 +155,7 @@ def display_box(message):
 
 def check():
     global current_string
-    global num,expression
+    global num
     num0 = []
     for i in current_string:
         if i >= '0' and i <= '9':
@@ -175,7 +175,7 @@ def check():
     for i in range(l-1):
         if ans[i] in op and ans[i+1] in op:
             return None
-    expression = ans
+    expression=ans
     ans = eval(ans)
     print(ans)
     return ans
@@ -652,7 +652,7 @@ def ai():
                     return
         value[it] = -99999
 
-
+mutex = Lock()#锁
 def apply_for_join_game(name_):
     applying = {"type": 0,
                 "msg": {
@@ -758,9 +758,13 @@ def client_thread(conn,addr):
                         continue
     #came out of loop
         conn.close()
+def draw_thread():
+        while True:
+                draw()
 
 if __name__ == '__main__':
     draw()
+    #start_new_thread(draw_thread, ())
     pygame.display.flip()
     dd = 160
     ss = 28
@@ -902,10 +906,10 @@ if __name__ == '__main__':
                     print('P2P模式')
                     mode = 'p2p'
                 elif x in range(ss, ss+xx) and y in range(h+3, h+3+yy):
-                    print('网络模式John')
+                    print('网络模式Mary')
                     # 匹配玩家
                     clientSocket = socket(AF_INET, SOCK_STREAM)
-                    clientSocket.bind(("127.0.0.1",908))
+                    clientSocket.bind(("127.0.0.1",909))
                     clientSocket.connect((serverName, serverPort))
                     applying_ = apply_for_join_game(name)
                     send_msg_to(clientSocket, applying_)
@@ -1043,9 +1047,10 @@ if __name__ == '__main__':
                                             "x": i,
                                             "y": j
                                         },
-                                        "exp": expression
+                                        "exp": current_string
                                     }
                                 }
+                                print('sb')
                                 send_msg_to(clientSocket, ms)
                                 net_flag = 1
                                 role_change()
