@@ -12,13 +12,13 @@ import itertools
 import copy
 import random
 
+# 网络设置
 ip = '127.0.0.1'
 serverPort = 50005
 serveraddr = ip, serverPort
-clientPort = 980
-clientaddr = ip,clientPort
+clientPort = random.randint(100, 1000)
+clientaddr = ip, clientPort
 name = 'Lucy'
-
 if(sys.version[:1] == "3"):
     import queue as Queue
     from _thread import *
@@ -26,6 +26,10 @@ else:
     import Queue
     from thread import *
 
+
+# 全局变量初始化
+times = [0 for i in range(10)]
+length_of_chess = 54
 side = -1
 time = -1
 total = -1
@@ -37,24 +41,20 @@ quit_flag_1 = -1
 quit_flag_2 = -1
 msg_type = -1
 expression = ''
-
-# 开始游戏
+mode = 'p2p'
+role = 'red'
 num = []
 input_flag = 0
 current_string = []
 ok = 0
+blue_sum, red_sum = 0, 0
 last_moment = 0
 pre_space = None
 pre_chess = None
+pre_key = None
 pygame.font.init()
-blue_sum = 0
-red_sum = 0
-blue_score_flag = 0
-red_score_flag = 0
 ans = []
 game_end = False
-mode = 'p2p'
-role = 'red'
 select_chess = None
 selected = None
 chess_pos = [[0]*15 for i in range(15)]
@@ -69,12 +69,10 @@ for j in range(7):
         chess0[j].append((st+i*dx, h-i*dy))
     st += dx
     h += dy
-
 st = 400
 h = 220
 for i in range(8):
     chess0[i].append((st, h+i*dd))
-
 st = 800
 h = 450
 for j in range(7):
@@ -118,7 +116,6 @@ weight = [[-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2],
           [-2, -2, -2, -2, -2, -1, -2, -1, -2, -1, -2, -2, -2, -2, -2],
           [-2, -2, -2, -2, -2, -2, -1, -2, -1, -2, -2, -2, -2, -2, -2],
           [-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2]]
-
 b = []
 r = []
 pygame.init()
@@ -130,7 +127,6 @@ for i in range(10):
     b.append(pygame.image.load('./image/蓝棋'+str(i)+'.png'))
 for i in range(10):
     r.append(pygame.image.load('./image/红棋'+str(i)+'.png'))
-
 blue_sign = pygame.image.load("./image/蓝棋.png").convert_alpha()
 red_sign = pygame.image.load("./image/红棋.png").convert_alpha()
 ok_sign = pygame.image.load("./image/ok.jpg").convert_alpha()
@@ -145,7 +141,7 @@ area = background.get_rect()  # 获取矩形区域
 
 
 def display_box(message):
-    # print(message)
+    print(message)
     pygame.display.set_caption("请直接输入式子，并按回车确认")
     fontobject = pygame.font.SysFont("Ink Free", 25)
     screen.blit(fontobject.render('Input:  ', 1, (47, 79, 79)), (15, 620))
@@ -175,8 +171,8 @@ def check():
                 bracket_should_be = ')'
             else:
                 bracket_should_be = '('
-    if bracket_should_be!='(':
-            return None
+    if bracket_should_be != '(':
+        return None
     op = ['+', '-', '/', '*']
     if ans[0] in op or ans[0] == ')' or ans[-1] in op or ans[-1] == '(':
         return None
@@ -201,6 +197,7 @@ def draw():
     global chess_pos
     global flag
     global select_chess
+    global selected
     global ai_s
     global ai_t
     global ft2_surf
@@ -222,23 +219,23 @@ def draw():
     ft2_surf = font.render(final_text2, 1, (65, 105, 225))
     screen.blit(background, area)
     pygame.display.set_caption("国际数棋")
-    if mode == 'net' :
-        if net_flag == 0 :
-                pygame.display.set_caption("轮到该方出棋!")
+    if mode == 'net':
+        if net_flag == 0:
+            pygame.display.set_caption("轮到该方出棋!")
         elif input_flag == 0:
-                pygame.display.set_caption("国际数棋")
+            pygame.display.set_caption("国际数棋")
         if quit_flag_1 == 1:
-                pygame.display.set_caption("主动退出，你输了!")
+            pygame.display.set_caption("主动退出，你输了!")
         elif quit_flag_2 == 2:
-                pygame.display.set_caption("对方主动退出，你赢了!")
-                
+            pygame.display.set_caption("对方主动退出，你赢了!")
+
     if mode == 'ai' and role == 'red':
         screen.blit(ok_sign, (130, 666))
         pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
-        
+
     if input_flag == 1 and (net_flag == 0 or mode != 'net'):
         display_box("".join(current_string))
-        
+
     if game_end:
         screen.blit(ft2_surf, (70, 210))
         screen.blit(ft1_surf, (520, 210))
@@ -375,7 +372,8 @@ def dfs(num, ans, goal):
 
 
 def is_chess_clicked(x, y):
-    d = 54
+    global length_of_chess
+    d = length_of_chess
     global role
     global chess_pos
     global flag
@@ -390,13 +388,14 @@ def is_chess_clicked(x, y):
 
 def removable(x, y, select_chess):
     global chess_pos
+    global selected
     global flag
     global role
     global ans
     global num
     global input_flag
-    d = 54
-
+    global length_of_chess
+    d = length_of_chess
     # 被移动棋子的坐标
     xx, yy = select_chess
 
@@ -478,6 +477,7 @@ def removable(x, y, select_chess):
                         break
                     if mode == 'p2p' or (mode == 'ai' and role == 'blue') or mode == 'net':
                         input_flag = 1
+                        selected = i, j
                     if flag[xx][yy] in num:
                         num.remove(flag[xx][yy])
                     # 确保空格旁边有棋子
@@ -494,8 +494,6 @@ def removable(x, y, select_chess):
                     '''
     return None
 
-
-times = [0 for i in range(10)]
 
 # 默认red为电脑方
 
@@ -738,7 +736,7 @@ def receive_msg_3():
 def receive_msg_4():
     global quit_flag_2
     msg = {"type": 3, "side": gameside}
-    send_msg_to(client, msg)
+    send_msg_to(clientSocket, msg)
     quit_flag_2 == 1
     sys.exit()
     pygame.quit()
@@ -767,18 +765,189 @@ def client_thread(conn, addr):
     conn.close()
 
 
+def key_Processing(e):
+    global current_string
+    global selected
+    global select_chess
+    global pre_key
+    global input_flag
+    global current_string
+    global num
+    global chess_pos
+    global pre_space
+    global pre_chess
+    global flag
+    global mode
+    global gameid
+    global gameside
+    global clientSocket
+    global expression
+    global net_flag
+
+    if e.key == pygame.K_ESCAPE:
+        sys.exit()
+    elif input_flag == 1:
+        if e.key == pygame.K_BACKSPACE:
+            current_string = current_string[0:-1]
+        elif e.unicode == '\r':
+            x, y = selected
+            removable(x, y, select_chess)
+            if len(num) < 2:
+                return
+            correct = check()
+            ii, jj = select_chess
+            if correct == None:
+                print('Input Error!')
+            elif correct != flag[ii][jj] % 10:
+                print('Wrong! Please input again')
+            else:
+                fflag = 0
+                d = length_of_chess
+                for i in range(15):
+                    for j in range(15):
+                        if flag[i][j] == -1:
+                            if x > chess_pos[i][j][0] and x < chess_pos[i][j][0]+d and y > chess_pos[i][j][1] and y < chess_pos[i][j][1]+d:
+                                fflag = 1
+                                x, y = i, j
+                                break
+                    if fflag == 1:
+                        break
+                print(x, y, ii, jj)
+                flag[x][y] = copy.deepcopy(flag[ii][jj])
+                flag[ii][jj] = -1
+                pre_space = x, y
+                pre_chess = ii, jj
+                selected = None
+                select_chess = None
+
+                if mode == 'net':
+                    ms = {"type": 1, "msg": {"game_id": gameid, "side": gameside,
+                                             "num":  flag[ii][jj], "src": {"x": ii, "y": jj},
+                                             "dst": {"x": x, "y": y},
+                                             "exp": expression}
+                          }
+                    send_msg_to(clientSocket, ms)
+                    net_flag = 1
+                role_change()
+                current_string = []
+                input_flag = 0
+
+        elif e.key == pygame.K_KP_MINUS or e.key == pygame.K_MINUS:
+            current_string.append("-")
+        elif e.key == pygame.K_KP_PLUS or e.key == pygame.K_PLUS:
+            current_string.append("+")
+        elif e.key == pygame.K_KP_MULTIPLY or e.key == pygame.K_ASTERISK:
+            current_string.append("*")
+        elif e.key == pygame.K_KP_DIVIDE or e.key == pygame.K_SLASH:
+            current_string.append("/")
+
+        elif e.key == pygame.K_9:
+            if pre_key == 42 or pre_key == 54:
+                current_string.append("(")
+            else:
+                current_string.append("9")
+        elif e.key == pygame.K_0:
+            if pre_key == 42 or pre_key == 54:
+                current_string.append(")")
+            else:
+                current_string.append("0")
+        elif e.key == pygame.K_EQUALS:
+            if pre_key == 42 or pre_key == 54:
+                current_string.append("+")
+        elif e.key == pygame.K_8:
+            if pre_key == 42 or pre_key == 54:
+                current_string.append("*")
+            else:
+                current_string.append("8")
+
+        elif e.key >= 48 and e.key <= 57:
+            current_string.append(chr(e.key))
+        elif e.key == pygame.K_KP0:
+            current_string.append('0')
+        elif e.key == pygame.K_KP1:
+            current_string.append('1')
+        elif e.key == pygame.K_KP2:
+            current_string.append('2')
+        elif e.key == pygame.K_KP3:
+            current_string.append('3')
+        elif e.key == pygame.K_KP4:
+            current_string.append('4')
+        elif e.key == pygame.K_KP5:
+            current_string.append('5')
+        elif e.key == pygame.K_KP6:
+            current_string.append('6')
+        elif e.key == pygame.K_KP7:
+            current_string.append('7')
+        elif e.key == pygame.K_KP8:
+            current_string.append('8')
+        elif e.key == pygame.K_KP9:
+            current_string.append('9')
+    pre_key = e.scancode
+
+
+def Calculate_Point_And_Call_Of():
+    global flag
+    global net_flag
+    global mode
+    global gameid
+    global gameside
+    global clientSocket
+    global game_end
+
+    blue_score_flag = 0
+    red_score_flag = 0
+    print('算分叫停')
+    for i in range(0, 4):
+        for j in range(4, 11):
+            if flag[j][i] > 9:
+                red_score_flag += 1
+
+    for i in range(11, 15):
+        for j in range(4, 11):
+            if flag[j][i] > -1 and flag[j][i] < 10:
+                blue_score_flag += 1
+    # 如果有一方全部棋子都到位
+    print(red_score_flag, blue_score_flag)
+    if red_score_flag == 10 or blue_score_flag == 10:
+        if mode == 'net' and net_flag == 0:
+            ms = {
+                "type": 2,
+                "msg": {
+                    "request": "stop",
+                    "game_id": gameid,
+                    "side": gameside}
+            }
+            send_msg_to(clientSocket, ms)
+            net_flag = 1
+
+        game_end = True
+        blue_sum = 0
+        for i in range(11, 15):
+            for j in range(4, 11):
+                if flag[j][i] > 0 and flag[j][i] < 10:
+                    blue_sum += (weight[j][i]-10)*flag[j][i]
+
+        red_sum = 0
+        for i in range(0, 4):
+            for j in range(4, 11):
+                if flag[j][i] > 9:
+                    red_sum += weight[j][i]*(flag[j][i]-10)
+    else:
+        game_end = False
+
+
 if __name__ == '__main__':
     draw()
-    pygame.display.flip()
     dd = 160
     ss = 28
     h = 145
     xx = 150
     yy = 50
-    pre_key = None
-    while True:  # 死循环确保窗口一直显示
-        for e in pygame.event.get():  # 遍历所有事件
-            if e.type == pygame.QUIT:  # 如果单击关闭窗口，则退出
+    pygame.display.flip()
+    while True:
+        for e in pygame.event.get():
+
+            if e.type == pygame.QUIT:
                 if mode == 'net':
                     quit_flag_1 = 1
                     ms = {
@@ -791,110 +960,12 @@ if __name__ == '__main__':
                     send_msg_to(clientSocket, ms)
                 sys.exit()
                 pygame.quit()
-            # 按Esc则退出游戏
+
             elif e.type == pygame.KEYDOWN:
-                inkey = e.key
-                if inkey == pygame.K_ESCAPE:
-                    sys.exit()
-                elif input_flag == 1:  # and net_flag==gameside:
-                    if inkey == pygame.K_BACKSPACE:
-                        current_string = current_string[0:-1]
-                    elif e.unicode == '\r':
-                        print(x, y, select_chess)
-                        selected = removable(x, y, select_chess)
-                        if len(num) < 2:
-                            continue
-                        correct = check()
-                        ii, jj = select_chess
-                        if correct == None:
-                            print('Input Error!')
-                        elif correct != flag[ii][jj] % 10:
-                            print('Wrong! Please input again')
-                        else:
-                            print('本次点击点击到了可移动的空格')
-                            fflag = 0
-                            print(x, y)
-                            d = 54
-                            for i in range(15):
-                                for j in range(15):
-                                    if flag[i][j] == -1:
-                                        print(chess_pos[i][j])
-                                        if x > chess_pos[i][j][0] and x < chess_pos[i][j][0]+d and y > chess_pos[i][j][1] and y < chess_pos[i][j][1]+d:
-                                            fflag = 1
-                                            x, y = i, j
-                                            break
-                                if fflag == 1:
-                                    break
-                            flag[x][y] = copy.deepcopy(flag[ii][jj])
-                            flag[ii][jj] = -1
-                            pre_space = x, y
-                            pre_chess = ii, jj
-                            selected = None
-                            select_chess = None
-                            if mode == 'net':
-                                ms = {"type": 1, "msg": {"game_id": gameid, "side": gameside, "num":  flag[ii][jj], "src": {"x": ii, "y": jj},
-                                                         "dst": {"x": x, "y": y},
-                                                         "exp": expression}
-                                      }
-                                send_msg_to(clientSocket, ms)
-                                net_flag = 1
-                            role_change()
-                            current_string = []
-                            input_flag = 0
+                key_Processing(e)
 
-                    elif inkey == pygame.K_KP_MINUS or inkey == pygame.K_MINUS:
-                        current_string.append("-")
-                    elif inkey == pygame.K_KP_PLUS or inkey == pygame.K_PLUS:
-                        current_string.append("+")
-                    elif inkey == pygame.K_KP_MULTIPLY or inkey == pygame.K_ASTERISK:
-                        current_string.append("*")
-                    elif inkey == pygame.K_KP_DIVIDE or inkey == pygame.K_SLASH:
-                        current_string.append("/")
-
-                    elif e.key == pygame.K_9:
-                        if pre_key == 42 or pre_key == 54:
-                            current_string.append("(")
-                        else:
-                            current_string.append("9")
-                    elif e.key == pygame.K_0:
-                        if pre_key == 42 or pre_key == 54:
-                            current_string.append(")")
-                        else:
-                            current_string.append("0")
-                    elif e.key == pygame.K_EQUALS:
-                        if pre_key == 42 or pre_key == 54:
-                            current_string.append("+")
-                    elif e.key == pygame.K_8:
-                        if pre_key == 42 or pre_key == 54:
-                            current_string.append("*")
-                        else:
-                            current_string.append("8")
-
-                    elif inkey >= 48 and inkey <= 57:
-                        current_string.append(chr(inkey))
-                    elif inkey == pygame.K_KP0:
-                        current_string.append('0')
-                    elif inkey == pygame.K_KP1:
-                        current_string.append('1')
-                    elif inkey == pygame.K_KP2:
-                        current_string.append('2')
-                    elif inkey == pygame.K_KP3:
-                        current_string.append('3')
-                    elif inkey == pygame.K_KP4:
-                        current_string.append('4')
-                    elif inkey == pygame.K_KP5:
-                        current_string.append('5')
-                    elif inkey == pygame.K_KP6:
-                        current_string.append('6')
-                    elif inkey == pygame.K_KP7:
-                        current_string.append('7')
-                    elif inkey == pygame.K_KP8:
-                        current_string.append('8')
-                    elif inkey == pygame.K_KP9:
-                        current_string.append('9')
-                pre_key = e.scancode
             elif (role == 'red' and mode == 'ai' and ok == 1):
-                    # pygame.time.delay(2000)
+                # 模式切换，网络切换过来应该先退出，然后重新初始化
                 ai()
                 last_moment = 1
                 ok = 0
@@ -902,7 +973,8 @@ if __name__ == '__main__':
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
                 print(x, y)
-                if x in range(130, 200) and y in range(666, 720):
+                if mode == 'ai' and x in range(130, 200) and y in range(666, 720):
+                    # AI模式中勾选确认式子输入完毕
                     ok = 1
                 elif x in range(ss+dd//2, ss+dd//2+xx) and y in range(h-20, h-20+yy):
                     print('P2P模式')
@@ -945,93 +1017,32 @@ if __name__ == '__main__':
                     flag = weight
                     break
                 elif x in range(ss+dd*4, ss+dd*4+xx) and y in range(h, h+yy):
-                    print('算分叫停')
-                    for i in range(0, 4):
-                        for j in range(4, 11):
-                            if flag[j][i] == -1:
-                                red_score_flag += 1
+                    Calculate_Point_And_Call_Of()
 
-                    for i in range(11, 15):
-                        for j in range(4, 11):
-                            if flag[j][i] == -1:
-                                blue_score_flag += 1
-                    # print(red_score_flag,blue_score_flag)
-
-                    if red_score_flag == 0 or blue_score_flag == 0:
-                        if mode == 'net':
-                            if net_flag == 0:
-                                ms = {
-                                    "type": 2,
-                                    "msg": {
-                                        "request": "stop",
-                                        "game_id": gameid,
-                                        "side": gameside}
-                                }
-                                send_msg_to(clientSocket, ms)
-                                net_flag = 1
-
-                        game_end = True
-                        blue_sum = 0
-                        for i in range(11, 15):
-                            for j in range(4, 11):
-                                if flag[j][i] > 0 and flag[j][i] < 10:
-                                    blue_sum += (weight[j][i]-10)*flag[j][i]
-
-                        red_sum = 0
-                        for i in range(0, 4):
-                            for j in range(4, 11):
-                                if flag[j][i] > 9:
-                                    red_sum += weight[j][i]*(flag[j][i]-10)
-
-                    else:
-                        blue_score_flag = 0
-                        red_score_flag = 0
-                elif mode == 'p2p' or (role == 'blue' and mode == 'ai'):
-                    selected = is_chess_clicked(x, y)
-                    if selected is not None:
+                # 点击走棋
+                elif mode == 'p2p' or (role == 'blue' and mode == 'ai') or (mode == 'net' and net_flag == 0):
+                    # 未选择棋子，当前应该选择棋子
+                    clicked = is_chess_clicked(x, y)
+                    if clicked is not None:
                         print('本次点击点击到了棋子')
                         ans = []
                         last_moment = 0
-                        print(selected)
-                        select_chess = copy.deepcopy(selected)
-
+                        selected = copy.deepcopy(clicked)
+                        select_chess = copy.deepcopy(clicked)
+                    # 已经选择了棋子，当前应该选择可移动的位置，或者再次选择
                     elif select_chess != None:
-                        selected = removable(x, y, select_chess)
-                        if selected is not None:
+                        clicked = removable(x, y, select_chess)
+                        if clicked is not None and input_flag == 0:
                             print('本次点击点击到了可移动的空格')
-                            print(selected)
-                            i, j = selected
+                            i, j = clicked
                             ii, jj = select_chess
                             flag[i][j] = copy.deepcopy(flag[ii][jj])
                             flag[ii][jj] = -1
-                            pre_space = selected
-                            pre_chess = select_chess
+                            pre_space = copy.deepcopy(clicked)
+                            pre_chess = copy.deepcopy(select_chess)
                             selected = None
                             select_chess = None
-                            role_change()
-                elif mode == 'net':
-                    print(input_flag)
-                    if net_flag == 0:
-                        selected = is_chess_clicked(x, y)
-                        if selected is not None:
-                            print('本次点击点击到了棋子')
-                            ans = []
-                            last_moment = 0
-                            print(selected)
-                            select_chess = copy.deepcopy(selected)
-                        elif select_chess != None:
-                            selected = removable(x, y, select_chess)
-                            if selected is not None:
-                                print('本次点击点击到了可移动的空格')
-                                print(selected)
-                                i, j = selected  # 选中空格的坐标
-                                ii, jj = select_chess  # 选中棋子的坐标
-                                flag[i][j] = copy.deepcopy(flag[ii][jj])
-                                flag[ii][jj] = -1
-                                pre_space = selected
-                                pre_chess = select_chess
-                                selected = None
-                                select_chess = None
+                            if mode == 'net':
                                 ms = {
                                     "type": 1,
                                     "msg": {
@@ -1051,7 +1062,8 @@ if __name__ == '__main__':
                                 }
                                 send_msg_to(clientSocket, ms)
                                 net_flag = 1
-                                role_change()
+                            role_change()
+
                     #start_new_thread(client_thread, (clientSocket, addr))
 
             draw()
