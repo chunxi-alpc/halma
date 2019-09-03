@@ -30,7 +30,6 @@ else:
 # 全局变量初始化
 times = [0 for i in range(10)]
 length_of_chess = 54
-side = -1
 time = -1
 total = -1
 gameid = None
@@ -141,8 +140,7 @@ area = background.get_rect()  # 获取矩形区域
 
 
 def display_box(message):
-    print(message)
-    pygame.display.set_caption("请直接输入式子，并按回车确认")
+        
     fontobject = pygame.font.SysFont("Ink Free", 25)
     screen.blit(fontobject.render('Input:  ', 1, (47, 79, 79)), (15, 620))
     fontobject = pygame.font.SysFont("Segoe Script", 30)
@@ -209,9 +207,9 @@ def draw():
     global pre_space
     global pre_chess
     global input_flag
+    global expression
     global current_string
-    global gameside
-
+    
     final_text2 = "blue final score is:  " + str(blue_sum)
     final_text1 = "red final score is:  " + str(red_sum)
     font = pygame.font.SysFont("Ink Free", 30)
@@ -221,21 +219,29 @@ def draw():
     pygame.display.set_caption("国际数棋")
     if mode == 'net':
         if net_flag == 0:
-            pygame.display.set_caption("轮到该方出棋!")
-        elif input_flag == 0:
-            pygame.display.set_caption("国际数棋")
-        if quit_flag_1 == 1:
+            if input_flag == 0:
+                pygame.display.set_caption("轮到该方出棋!")
+            else:
+                pygame.display.set_caption("请直接输入式子，并按回车确认")
+        elif quit_flag_1 == 1:
             pygame.display.set_caption("主动退出，你输了!")
         elif quit_flag_2 == 2:
             pygame.display.set_caption("对方主动退出，你赢了!")
-
-    if mode == 'ai' and role == 'red':
+        else:
+            pygame.display.set_caption("对方下棋中……")
+    elif mode == 'ai' and role == 'red':
         screen.blit(ok_sign, (130, 666))
         pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
+    else:
+        pygame.display.set_caption("国际数棋")
 
-    if input_flag == 1 and (net_flag == 0 or mode != 'net'):
-        display_box("".join(current_string))
-
+    if (input_flag == 1 and (net_flag == 0 or mode != 'net')):
+        display_box(''.join(current_string))
+    elif expression!='':
+        display_box(expression)
+    print(expression)
+    print(input_flag,net_flag)
+    
     if game_end:
         screen.blit(ft2_surf, (70, 210))
         screen.blit(ft1_surf, (520, 210))
@@ -696,13 +702,18 @@ def receive_msg_1(new_mes):
     net_flag = copy.deepcopy(gameside)
 
 
+
 def receive_msg_2(new_mes):
     global flag
     global pre_space, pre_chess, selected, select_chess
     global net_flag
+    global expression
     i, j = new_mes['dst']['x'], new_mes['dst']['y']
     ii, jj = new_mes['src']['x'], new_mes['src']['y']
-    # if new_mes["exp"] != null
+    if new_mes["exp"] != "":
+        expression = new_mes['exp']
+    else:
+        expression = ""
     flag[i][j] = copy.deepcopy(flag[ii][jj])
     flag[ii][jj] = -1
     pre_space = i, j
@@ -1026,6 +1037,7 @@ if __name__ == '__main__':
                     if clicked is not None:
                         print('本次点击点击到了棋子')
                         ans = []
+                        show_exp_flag=0
                         last_moment = 0
                         selected = copy.deepcopy(clicked)
                         select_chess = copy.deepcopy(clicked)
