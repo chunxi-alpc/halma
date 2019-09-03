@@ -18,7 +18,9 @@ serverPort = 50005
 serveraddr = ip, serverPort
 clientPort = random.randint(100, 1000)
 clientaddr = ip, clientPort
-name = 'Lucy'
+NameList = ['Lucy','John','Lexi','lily','Mike','Max','Alen','Jakson']
+name = NameList[random.randint(0,len(NameList)-1)]
+oppName = ''
 if(sys.version[:1] == "3"):
     import queue as Queue
     from _thread import *
@@ -190,10 +192,8 @@ def role_change():
     else:
         role = 'blue'
 
-
 def draw():
-    global chess_pos
-    global flag
+    global chess_pos,flag
     global select_chess
     global selected
     global ai_s
@@ -209,18 +209,26 @@ def draw():
     global input_flag
     global expression
     global current_string
-    
-    final_text2 = "blue final score is:  " + str(blue_sum)
-    final_text1 = "red final score is:  " + str(red_sum)
-    font = pygame.font.SysFont("Ink Free", 30)
-    ft1_surf = font.render(final_text1, 1, (220, 20, 60))
-    ft2_surf = font.render(final_text2, 1, (65, 105, 225))
+    global name
+    global oppName,gameside
     screen.blit(background, area)
-    pygame.display.set_caption("国际数棋")
+    font = pygame.font.SysFont("Ink Free", 30)
     if mode == 'net':
+        if gameside==0:
+            RedName = name
+            BlueName = oppName
+        else:
+            RedName = oppName
+            BlueName = name
+        
+        Red_surf = font.render(RedName, 1, (220, 20, 60))
+        Blue_surf = font.render(BlueName, 1, (65, 105, 225))
+        screen.blit(Blue_surf, (130, 270))
+        screen.blit(Red_surf, (580, 270))
+        
         if net_flag == 0:
             if input_flag == 0:
-                pygame.display.set_caption("轮到该方出棋!")
+                pygame.display.set_caption("轮到您出棋!")
             else:
                 pygame.display.set_caption("请直接输入式子，并按回车确认")
         elif quit_flag_1 == 1:
@@ -229,20 +237,35 @@ def draw():
             pygame.display.set_caption("对方主动退出，你赢了!")
         else:
             pygame.display.set_caption("对方下棋中……")
-    elif mode == 'ai' and role == 'red':
-        screen.blit(ok_sign, (130, 666))
-        pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
+    elif mode == 'ai':
+        Red_surf = font.render('COMPUTER', 1, (220, 20, 60))
+        Blue_surf = font.render('PLAYER', 1, (65, 105, 225))
+        screen.blit(Blue_surf, (130, 270))
+        screen.blit(Red_surf, (570, 270))
+        
+        if role == 'red':
+            screen.blit(ok_sign, (130, 666))
+            pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
+        else:
+            pygame.display.set_caption("国际数棋")
     else:
+        Red_surf = font.render('PLAYER 1', 1, (220, 20, 60))
+        Blue_surf = font.render('PLAYER 2', 1, (65, 105, 225))
+        screen.blit(Blue_surf, (130, 270))
+        screen.blit(Red_surf, (580, 270))
+        
         pygame.display.set_caption("国际数棋")
 
     if (input_flag == 1 and (net_flag == 0 or mode != 'net')):
         display_box(''.join(current_string))
     elif expression!='':
         display_box(expression)
-    print(expression)
-    print(input_flag,net_flag)
-    
     if game_end:
+        final_text2 = "blue final score is:  " + str(blue_sum)
+        final_text1 = "red final score is:  " + str(red_sum)
+        font = pygame.font.SysFont("Ink Free", 30)
+        ft1_surf = font.render(final_text1, 1, (220, 20, 60))
+        ft2_surf = font.render(final_text2, 1, (65, 105, 225))
         screen.blit(ft2_surf, (70, 210))
         screen.blit(ft1_surf, (520, 210))
 
@@ -644,13 +667,11 @@ def ai():
 
     for kk in range(10):
         it = value.index(max(value))
-        print(it)
         # it为当前尝试移动棋子编号，红色棋子>9
         xx = cc[it][0]
         yy = cc[it][1]
         q = [0, 1, 2, 3]
         random.shuffle(q)
-        print(q)
         for each in q:
             if each == 0:
                 if left_line(xx, yy):
@@ -754,6 +775,7 @@ def receive_msg_4():
 
 
 def client_thread(conn, addr):
+    global oppName
     while True:
         data = conn.recv(1024)
         if not data:
@@ -761,6 +783,8 @@ def client_thread(conn, addr):
         print("收到的初始消息为：", data)
         data = json.loads(data)
         print("解压后消息为：", data)
+        if  oppName=='' and 'counterpart_name' in data:
+            oppName = data[ 'counterpart_name']
         if not 'status'in data:
             receive_msg_2(data)
         elif data['status'] == 1:
