@@ -31,16 +31,16 @@ else:
 
 # 全局变量初始化
 times = [0 for i in range(10)]
-length_of_chess = 54
-time = -1
-total = -1
+length_of_chess = 54#直径
+time = -1#思考时间
+total = -1#总时间
+overtime_side=-1
 gameid = None
 gameside = -1
 clientSocket = None
 net_flag = -1
 quit_flag_1 = -1
 quit_flag_2 = -1
-msg_type = -1
 expression = ''
 mode = 'p2p'
 role = 'red'
@@ -62,7 +62,7 @@ chess_pos = [[0]*15 for i in range(15)]
 chess0 = [[] for i in range(8)]
 dd = 65
 h = 450
-dx = sqrt(3)/2*dd
+dx = sqrt(3)/2*dd 
 dy = dd*0.5
 st = 5
 for j in range(7):
@@ -130,21 +130,20 @@ for i in range(10):
     r.append(pygame.image.load('./image/红棋'+str(i)+'.png'))
 blue_sign = pygame.image.load("./image/蓝棋.png").convert_alpha()
 red_sign = pygame.image.load("./image/红棋.png").convert_alpha()
-ok_sign = pygame.image.load("./image/ok.jpg").convert_alpha()
-mode_select_image = pygame.image.load(
-    "./image/mode_select.png").convert_alpha()
-repent_image = pygame.image.load("./image/repent.png").convert_alpha()
-restart_image = pygame.image.load("./image/restart.png").convert_alpha()
-quit_image = pygame.image.load("./image/quit.png").convert_alpha()
+ok_sign = pygame.image.load("./image/ok.jpg").convert_alpha()#对勾，人机模式
+mode_select_image = pygame.image.load("./image/mode_select.png").convert_alpha()
+repent_image = pygame.image.load("./image/repent.png").convert_alpha()#悔棋
+restart_image = pygame.image.load("./image/restart.png").convert_alpha()#重新开局
+quit_image = pygame.image.load("./image/quit.png").convert_alpha()#叫停
 #sound_background = pygame.mixer.Sound("./sound/background.wav")
 sound_move = pygame.mixer.Sound("./sound/move.wav")
 area = background.get_rect()  # 获取矩形区域
 
 
-def display_box(message):
+def display_box(message):#显示
         
     fontobject = pygame.font.SysFont("Ink Free", 25)
-    screen.blit(fontobject.render('Input:  ', 1, (47, 79, 79)), (15, 620))
+    screen.blit(fontobject.render('Input:  ', 1, (47, 79, 79)), (15, 620))#颜色，坐标
     fontobject = pygame.font.SysFont("Segoe Script", 30)
     if len(message) != 0:
         screen.blit(fontobject.render(message, 1, (25, 25, 112)), (20, 650))
@@ -161,7 +160,7 @@ def check():
         return None
     if set(num0) != set(num):
         return None
-    ans = "".join(current_string)
+    ans = "".join(current_string)#返回通过指定字符连接序列中元素后生成的新字符串
     bracket_should_be = '('
     for i in range(len(num)):
         if num[i] == '(' or num[i] == ')':
@@ -211,6 +210,9 @@ def draw():
     global current_string
     global name
     global oppName,gameside
+    global quit_flag_1,quit_flag_2
+    global net_flag
+    global overtime_side
     screen.blit(background, area)
     font = pygame.font.SysFont("Ink Free", 30)
     if mode == 'net':
@@ -225,18 +227,23 @@ def draw():
         Blue_surf = font.render(BlueName, 1, (65, 105, 225))
         screen.blit(Blue_surf, (130, 270))
         screen.blit(Red_surf, (580, 270))
-        
         if net_flag == 0:
-            if input_flag == 0:
+            if quit_flag_2==1:
+                if overtime_side == gameside:
+                    pygame.display.set_caption("您已超时，游戏结束，你输了！")
+                elif overtime_side != gameside:
+                    pygame.display.set_caption("对方超时，游戏结束，你赢了！")
+                else:
+                    pygame.display.set_caption("对方主动退出，你赢了!")
+            elif input_flag == 0:
                 pygame.display.set_caption("轮到您出棋!")
             else:
-                pygame.display.set_caption("请直接输入式子，并按回车确认")
-        elif quit_flag_1 == 1:
-            pygame.display.set_caption("主动退出，你输了!")
-        elif quit_flag_2 == 2:
-            pygame.display.set_caption("对方主动退出，你赢了!")
+                pygame.display.set_caption("请直接输入式子，并按回车确认")            
         else:
-            pygame.display.set_caption("对方下棋中……")
+            if quit_flag_2==1:
+                pygame.display.set_caption("对方主动退出，你赢了!")
+            else:
+                pygame.display.set_caption("对方下棋中……")
     elif mode == 'ai':
         Red_surf = font.render('COMPUTER', 1, (220, 20, 60))
         Blue_surf = font.render('PLAYER', 1, (65, 105, 225))
@@ -767,12 +774,21 @@ def receive_msg_3():
 
 def receive_msg_4():
     global quit_flag_2
+    global clientSocket
+    msg = {"type": 3, "side": gameside}
+    print(msg)
+    quit_flag_2 = 1
+    print('szszszsz')
+    send_msg_to(clientSocket, msg)
+
+def receive_msg_5(new_mes):
+    global clientSocket
+    global overtime_side
+    overtime_side = new_mes['side']
+    quit_flag_2 = 1
     msg = {"type": 3, "side": gameside}
     send_msg_to(clientSocket, msg)
-    quit_flag_2 == 1
-    sys.exit()
-    pygame.quit()
-
+
 
 def client_thread(conn, addr):
     global oppName
@@ -795,6 +811,9 @@ def client_thread(conn, addr):
             receive_msg_3()
         elif data['status'] == 2 and data['request'] == "quit":
             receive_msg_4()
+            break
+        elif data['status'] == 3:
+            receive_msg_5(data)
             break
 
     conn.close()
@@ -928,6 +947,7 @@ def Calculate_Point_And_Call_Of():
     global gameside
     global clientSocket
     global game_end
+    global blue_sum,red_sum
 
     blue_score_flag = 0
     red_score_flag = 0
@@ -984,7 +1004,6 @@ if __name__ == '__main__':
 
             if e.type == pygame.QUIT:
                 if mode == 'net':
-                    quit_flag_1 = 1
                     ms = {
                         "type": 2,
                         "msg": {
@@ -993,6 +1012,7 @@ if __name__ == '__main__':
                             "side": gameside}
                     }
                     send_msg_to(clientSocket, ms)
+                    pygame.display.set_caption("主动退出，你输了!")
                 sys.exit()
                 pygame.quit()
 
@@ -1104,6 +1124,9 @@ if __name__ == '__main__':
 
             draw()
             pygame.display.flip()  # 更新全部显示
+            if quit_flag_2==1:
+                sys.exit()
+                pygame.quit()
 
     quit()  # 退出pygame
     #start_new_thread(draw_thread, ())
