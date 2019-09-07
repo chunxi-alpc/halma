@@ -13,7 +13,7 @@ import copy
 import random
 
 # 网络设置
-ip = '127.0.0.1'
+ip ='127.0.0.1'
 serverPort = 50005
 serveraddr = ip, serverPort
 clientPort = random.randint(100, 1000)
@@ -241,7 +241,12 @@ def draw():
                 pygame.display.set_caption("请直接输入式子，并按回车确认")            
         else:
             if quit_flag_2==1:
-                pygame.display.set_caption("对方主动退出，你赢了!")
+                if overtime_side == gameside:
+                    pygame.display.set_caption("您已超时，游戏结束，你输了！")
+                elif overtime_side != gameside:
+                    pygame.display.set_caption("对方超时，游戏结束，你赢了！")
+                else:
+                    pygame.display.set_caption("对方主动退出，你赢了!")
             else:
                 pygame.display.set_caption("对方下棋中……")
     elif mode == 'ai':
@@ -784,11 +789,13 @@ def receive_msg_4():
 def receive_msg_5(new_mes):
     global clientSocket
     global overtime_side
+    global quit_flag_2
     overtime_side = new_mes['side']
     quit_flag_2 = 1
     msg = {"type": 3, "side": gameside}
     send_msg_to(clientSocket, msg)
-
+
+
 
 def client_thread(conn, addr):
     global oppName
