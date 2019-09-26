@@ -13,14 +13,14 @@ import copy
 import random
 
 # 网络设置
-ip ='127.0.0.1'#'192.168.43.204'
+ip = '127.0.0.1'  # '192.168.43.204'
 serverPort = 50005
 serveraddr = ip, serverPort
-clientIp ='127.0.0.1'#'192.168.43.204'
+clientIp = '127.0.0.1'  # '192.168.43.204'
 clientPort = random.randint(100, 1000)
 clientaddr = clientIp, clientPort
-NameList = ['Lucy','John','Lexi','lily','Mike','Max','Alen','Jakson']
-name = NameList[random.randint(0,len(NameList)-1)]
+NameList = ['Lucy', 'John', 'Lexi', 'lily', 'Mike', 'Max', 'Alen', 'Jakson']
+name = NameList[random.randint(0, len(NameList)-1)]
 oppName = ''
 if(sys.version[:1] == "3"):
     import queue as Queue
@@ -32,18 +32,18 @@ else:
 
 # 全局变量初始化
 times = [0 for i in range(10)]
-length_of_chess = 54#直径
-time = -1#思考时间
-total = -1#总时间
-overtime_side=-1
-stop_side=-1
+length_of_chess = 54  # 直径
+time = -1  # 思考时间
+total = -1  # 总时间
+overtime_side = -1
+stop_side = -1
 gameid = None
 gameside = -1
 clientSocket = None
 net_flag = -1
 timeout_flag = -1
 quit_flag = -1
-stop_flag=-1
+stop_flag = -1
 expression = ''
 mode = 'p2p'
 role = 'red'
@@ -65,7 +65,7 @@ chess_pos = [[0]*15 for i in range(15)]
 chess0 = [[] for i in range(8)]
 dd = 65
 h = 450
-dx = sqrt(3)/2*dd 
+dx = sqrt(3)/2*dd
 dy = dd*0.5
 st = 5
 for j in range(7):
@@ -88,7 +88,6 @@ for i in range(8):
     for j in range(8):
         chess_pos[i+7-j][i+j] = chess0[i][j]
 
-
 flag = [[-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2],
         [-2, -2, -2, -2, -2, -2, -1, -2, -1, -2, -2, -2, -2, -2, -2],
         [-2, -2, -2, -2, -2, -1, -2, -1, -2, -1, -2, -2, -2, -2, -2],
@@ -105,7 +104,7 @@ flag = [[-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2],
         [-2, -2, -2, -2, -2, -2, -1, -2, -1, -2, -2, -2, -2, -2, -2],
         [-2, -2, -2, -2, -2, -2, -2, -1, -2, -2, -2, -2, -2, -2, -2]]
 
-weight=copy.deepcopy(flag)
+weight = copy.deepcopy(flag)
 
 b = []
 r = []
@@ -120,20 +119,23 @@ for i in range(10):
     r.append(pygame.image.load('./image/红棋'+str(i)+'.png'))
 blue_sign = pygame.image.load("./image/蓝棋.png").convert_alpha()
 red_sign = pygame.image.load("./image/红棋.png").convert_alpha()
-ok_sign = pygame.image.load("./image/ok.jpg").convert_alpha()#对勾，人机模式
-mode_select_image = pygame.image.load("./image/mode_select.png").convert_alpha()
-repent_image = pygame.image.load("./image/repent.png").convert_alpha()#悔棋
-restart_image = pygame.image.load("./image/restart.png").convert_alpha()#重新开局
-quit_image = pygame.image.load("./image/quit.png").convert_alpha()#叫停
+ok_sign = pygame.image.load("./image/ok.jpg").convert_alpha()  # 对勾，人机模式
+mode_select_image = pygame.image.load(
+    "./image/mode_select.png").convert_alpha()
+repent_image = pygame.image.load("./image/repent.png").convert_alpha()  # 悔棋
+restart_image = pygame.image.load(
+    "./image/restart.png").convert_alpha()  # 重新开局
+quit_image = pygame.image.load("./image/quit.png").convert_alpha()  # 叫停
 #sound_background = pygame.mixer.Sound("./sound/background.wav")
 sound_move = pygame.mixer.Sound("./sound/move.wav")
 area = background.get_rect()  # 获取矩形区域
 
 
-def display_box(message):#显示
-        
+def display_box(message):  # 显示
+
     fontobject = pygame.font.SysFont("Ink Free", 25)
-    screen.blit(fontobject.render('Input:  ', 1, (47, 79, 79)), (15, 620))#颜色，坐标
+    screen.blit(fontobject.render('Input:  ', 1,
+                                  (47, 79, 79)), (15, 620))  # 颜色，坐标
     fontobject = pygame.font.SysFont("Segoe Script", 30)
     if len(message) != 0:
         screen.blit(fontobject.render(message, 1, (25, 25, 112)), (20, 650))
@@ -150,7 +152,7 @@ def check():
         return None
     if set(num0) != set(num):
         return None
-    ans = "".join(current_string)#返回通过指定字符连接序列中元素后生成的新字符串
+    ans = "".join(current_string)  # 返回通过指定字符连接序列中元素后生成的新字符串
     bracket_should_be = '('
     for i in range(len(num)):
         if num[i] == '(' or num[i] == ')':
@@ -181,8 +183,9 @@ def role_change():
     else:
         role = 'blue'
 
+
 def draw():
-    global chess_pos,flag
+    global chess_pos, flag
     global select_chess
     global selected
     global ai_s
@@ -199,46 +202,46 @@ def draw():
     global expression
     global current_string
     global name
-    global oppName,gameside
-    global timeout_flag,quit_flag,stop_flag
+    global oppName, gameside
+    global timeout_flag, quit_flag, stop_flag
     global net_flag
-    global overtime_side,stop_side
+    global overtime_side, stop_side
     screen.blit(background, area)
     font = pygame.font.SysFont("Ink Free", 30)
     if mode == 'net':
-        if gameside==0:
+        if gameside == 0:
             RedName = name
             BlueName = oppName
         else:
             RedName = oppName
             BlueName = name
-        
+
         Red_surf = font.render(RedName, 1, (220, 20, 60))
         Blue_surf = font.render(BlueName, 1, (65, 105, 225))
         screen.blit(Blue_surf, (130, 270))
         screen.blit(Red_surf, (580, 270))
-        if timeout_flag==1:
+        if timeout_flag == 1:
             if overtime_side == gameside:
                 pygame.display.set_caption("您已超时，游戏结束，你输了！")
             elif overtime_side != gameside:
                 pygame.display.set_caption("对方超时，游戏结束，你赢了！")
 
-        if stop_flag==1:
+        if stop_flag == 1:
             if stop_side == gameside:
                 pygame.display.set_caption("您已点击算分叫停，游戏结束！")
             elif stop_side != gameside:
                 pygame.display.set_caption("对方点击算分叫停，游戏结束！")
 
-        elif net_flag==0:
-            if quit_flag==1:
+        elif net_flag == 0:
+            if quit_flag == 1:
                 pygame.display.set_caption("对方主动退出，你赢了!")
             elif input_flag == 0:
                 pygame.display.set_caption("轮到您出棋!")
             else:
                 pygame.display.set_caption("请直接输入式子，并按回车确认")
-                
-        elif net_flag==1:
-            if quit_flag==1:
+
+        elif net_flag == 1:
+            if quit_flag == 1:
                 pygame.display.set_caption("对方主动退出，你赢了!")
             else:
                 pygame.display.set_caption("对方下棋中……")
@@ -247,23 +250,23 @@ def draw():
         Blue_surf = font.render('PLAYER', 1, (65, 105, 225))
         screen.blit(Blue_surf, (130, 270))
         screen.blit(Red_surf, (570, 270))
-        
+
         if role == 'red':
             screen.blit(ok_sign, (130, 666))
-            pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家就不能悔棋了哦！")
+            pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家您就不能悔棋了哦！")
         else:
-            pygame.display.set_caption("国际数棋")
+            pygame.display.set_caption("电脑下棋中……")
     else:
         Red_surf = font.render('PLAYER 1', 1, (220, 20, 60))
         Blue_surf = font.render('PLAYER 2', 1, (65, 105, 225))
         screen.blit(Blue_surf, (130, 270))
         screen.blit(Red_surf, (580, 270))
-        
+
         pygame.display.set_caption("国际数棋")
 
     if (input_flag == 1 and (net_flag == 0 or mode != 'net')):
         display_box(''.join(current_string))
-    elif expression!='':
+    elif expression != '':
         display_box(expression)
     if game_end:
         final_text2 = "blue final score is:  " + str(blue_sum)
@@ -289,23 +292,22 @@ def draw():
     screen.blit(red_sign, (730, 260))
     if role == 'blue':
         screen.blit(select_image, (70, 260))
-        if ans != []:
-            font = pygame.font.SysFont("Segoe Script", 40)
-            hh = 555
-            for each in ans:
-                ft2_surf = font.render(each, 1, (220, 20, 60))
-                screen.blit(ft2_surf, (690, hh))
-                hh += 30
-
     else:
         screen.blit(select_image, (730, 260))
+    if mode == 'ai' and role==ai.other_man:
         if ans != []:
             font = pygame.font.SysFont("Segoe Script", 40)
             hh = 555
-            for each in ans:
-                ft2_surf = font.render(each, 1, (65, 105, 225))
-                screen.blit(ft2_surf, (20, hh))
-                hh += 30
+            if role == 'red':
+                for each in ans:
+                    ft2_surf = font.render(each, 1, (65, 105, 225))
+                    screen.blit(ft2_surf, (20, hh))
+                    hh += 30
+            else :
+                for each in ans:
+                    ft2_surf = font.render(each, 1, (220, 20, 60))
+                    screen.blit(ft2_surf, (690, hh))
+                    hh += 30
 
     if mode == 'p2p':
         screen.blit(mode_select_image, (ss+dd/2-15, h-20-8))
@@ -331,7 +333,6 @@ def draw():
                     screen.blit(b[flag[i][j]], chess_pos[i][j])
                 else:
                     screen.blit(r[flag[i][j]-10], chess_pos[i][j])
-
 # sound_background.play()
 
 
@@ -432,7 +433,6 @@ def removable(x, y, select_chess):
     d = length_of_chess
     # 被移动棋子的坐标
     xx, yy = select_chess
-
     # 移
     dxy = [(xx-1, yy-1), (xx-2, yy), (xx+1, yy-1),
            (xx-1, yy+1), (xx+2, yy), (xx+1, yy+1)]
@@ -520,178 +520,106 @@ def removable(x, y, select_chess):
                     for each in range(num_len):
                         if num[each] > 9:
                             num[each] = num[each]-10
-                    '''
-                    ans=dfs(num,[],flag[xx][yy])
-                    print(ans)
-                    if ans!=[]:
-                        return i,j
-                    '''
+
+                    if mode == 'ai':
+                        ans = dfs(num, [], flag[xx][yy])
+                        if ans != []:
+                            return i, j
+
     return None
 
 
-# 默认red为电脑方
+class AI:
+    def __init__(self, ai_man, other_man):
+        self.ai_man = ai_man
+        self.other_man = other_man
+        self.maxdepth = 3
+        self.act_step = 0
+        self.best_move = None
+        
+    # 局面评估函数
+    '''
+        局面评估函数：红方-极大值，蓝方-极小值
+            （30-红方每个棋子到每个蓝方对应位置的距离）*权值
+            -（30-蓝方每个棋子到每个红方对应位置的距离）*权值
+    '''
 
+    def situation_vl(self):
+        global flag
+        global weight
+        sit_value = 0
+        for i in range(15):
+            for j in range(15):
+                if flag[i][j] > 9:
+                    chess_v = flag[i][j]-10
+                    if chess_v == 0:
+                        chess_v = 1
+                    v = 0
+                    for x in range(4, 11):
+                        for y in range(0, 4):
+                            if weight[x][y] > 0:
+                                v += weight[x][y]*(30-abs(i-x)-abs(j-y))
+                    sit_value += (v*chess_v)
+                elif flag[i][j] >= 0:
+                    chess_v = flag[i][j]
+                    if chess_v == 0:
+                        chess_v = 1
+                    v = 0
+                    for x in range(4, 11):
+                        for y in range(11, 15):
+                            if weight[x][y] > 0:
+                                v += (weight[x][y]-10)*(30-abs(i-x)-abs(j-y))
+                    sit_value -= (v*chess_v)
+        return sit_value
+    # 生成player方所有走法,return ()
 
-def ai_go(i, j, xx, yy):
-    global times
-    global flag
-    flag[i][j] = copy.deepcopy(flag[xx][yy])
-    print(flag[xx][yy])
-    times[flag[xx][yy]-10] -= 2
-    flag[xx][yy] = -1
-    global pre_space
-    global pre_chess
-    pre_space = i, j
-    pre_chess = xx, yy
-    global selected
-    global select_chess
-    selected = None
-    select_chess = None
-    role_change()
+    def generate_exercise(self, player):
+        global flag
+        global chess_pos
+        if player == 'red':
+            limit = 10
+        else:
+            limit = 0
+        nodes=[]
+        for chess_x in range(15):
+            for chess_y in range(15):
+                if flag[chess_x][chess_y] >= limit and flag[chess_x][chess_y] < limit+10:
+                    for x in range(15):
+                        for y in range(15):
+                            if flag[x][y] == -1:
+                                node = removable(chess_pos[x][y][0]+20, chess_pos[x][y][1]+20, (chess_x, chess_y))
+                                if node !=None:
+                                    nodes.append(((chess_x,chess_y),node))
+        return nodes
 
-
-def left_line(xx, yy):
-    # 左斜
-    global flag
-    global ans
-    for i in range(14, xx, -1):
-        j = xx+yy-i
-        if flag[i][j] == -1:
-            # (i,j)为空格的位置
-            num = []
-            ii = i-1
-            jj = j+1
-            if flag[ii][jj] > -1 and ii != xx:
-                for iii in range(ii, 15):
-                    jjj = xx+yy-iii
-                    if flag[iii][jjj] > -1:
-                        num.append(flag[iii][jjj])
-            num_len = len(num)
-            for each in range(num_len):
-                if num[each] > 9:
-                    num[each] = num[each]-10
-            ans = dfs(num, [], flag[xx][yy])
-            print(ans)
-            if ans != []:
-                ai_go(i, j, xx, yy)
-                return True
-    return False
-
-
-def right_line(xx, yy):
-    # 右斜
-    global flag
-    global ans
-    for i in range(0, xx):
-        j = i-xx+yy
-        if flag[i][j] == -1:
-            # (i,j)为空格的位置
-            num = []
-            ii = i+1
-            jj = j+1
-            if flag[ii][jj] > -1 and ii != xx:
-                for iii in range(ii, xx):
-                    jjj = yy-xx+iii
-                    if flag[iii][jjj] > -1:
-                        num.append(flag[iii][jjj])
-            num_len = len(num)
-            for each in range(num_len):
-                if num[each] > 9:
-                    num[each] = num[each]-10
-            ans = dfs(num, [], flag[xx][yy])
-            print(ans)
-            if ans != []:
-                ai_go(i, j, xx, yy)
-                return True
-    return False
-
-
-def one_step(xx, yy):
-    global flag
-    global last_moment
-    if last_moment == 1:
-        dxy = [(xx-1, yy-1), (xx-2, yy), (xx+1, yy-1),
-               (xx-1, yy+1), (xx+2, yy), (xx+1, yy+1)]
-    else:
-        dxy = [(xx-1, yy-1), (xx+1, yy-1)]
-    # 邻
-    for xy in dxy:
-        i = xy[0]
-        j = xy[1]
-        if i >= 0 and i <= 14 and j >= 0 and j <= 14:
-            if flag[i][j] > -1:
-                dx = i-xx
-                dy = j-yy
-                i = dx+i
-                j = dy+j
-                if i >= 0 and i <= 14 and j >= 0 and j <= 14:
-                    if flag[i][j] == -1:
-                        ai_go(i, j, xx, yy)
-                        return True
-    return False
-
-
-def two_step(xx, yy):
-    global flag
-    global last_moment
-    if last_moment == 1:
-        dxy = [(xx-1, yy-1), (xx-2, yy), (xx+1, yy-1),
-               (xx-1, yy+1), (xx+2, yy), (xx+1, yy+1)]
-    else:
-        dxy = [(xx-1, yy-1), (xx+1, yy-1)]
-    # 移
-    for xy in dxy:
-        i = xy[0]
-        j = xy[1]
-        if i >= 0 and i <= 14 and j >= 0 and j <= 14:
-            if flag[i][j] == -1:
-                ai_go(i, j, xx, yy)
-                return True
-    return False
-
-
-def ai():
-    global chess_pos
-    global flag
-    global ans
-    global times
-
-    value = [0 for i in range(10)]
-    # 按照f(x)=abs(dx)+abs(dy)排序尝试的棋子
-
-    cc = [0 for i in range(10)]
-    # 存储red所有棋子的位置
-
-    for i in range(15):
-        for j in range(15):
-            if flag[i][j] > 9:
-                v = flag[i][j]-10
-                dis = abs(i-7)+abs(j)
-                value[v] = dis+times[v]
-                cc[v] = i, j
-
-    for kk in range(10):
-        it = value.index(max(value))
-        # it为当前尝试移动棋子编号，红色棋子>9
-        xx = cc[it][0]
-        yy = cc[it][1]
-        q = [0, 1, 2, 3]
-        random.shuffle(q)
-        for each in q:
-            if each == 0:
-                if left_line(xx, yy):
-                    return
-            elif each == 1:
-                if right_line(xx, yy):
-                    return
-            elif each == 2:
-                if one_step(xx, yy):
-                    return
-            else:
-                if two_step(xx, yy):
-                    return
-        value[it] = -99999
-
+    # 极大极小搜索及Alpha—Beta剪枝函数
+    def alphaBeta_search(self, depth, alpha, beta, player):
+        global flag
+        #print(depth, alpha, beta)
+        if self.maxdepth == depth or terminal(flag):  # 到达搜索深度
+            return self.situation_vl()  # 返回局面评估值
+        nodes = self.generate_exercise(player)
+        if player == 'blue':
+            player = 'red' 
+        else:
+            player = 'blue'
+        for node in nodes:
+            chess,space=node
+            chess_x,chess_y=chess
+            space_x,space_y=space
+            flag[space_x][space_y] = copy.deepcopy(flag[chess_x][chess_y])
+            flag[chess_x][chess_y] = -1
+            value = -self.alphaBeta_search(depth+1, -beta, -alpha, player)
+            flag[chess_x][chess_y] = copy.deepcopy(flag[space_x][space_y])
+            flag[space_x][space_y] = -1
+            #print(value)
+            if value >= beta:  
+                return beta
+            if value > alpha:  # val大于了下界alpha，修改alpha，这是一个PV节点
+                if depth == 0:  # 第0层时，当出现了优于目前的alpha值则记录最佳走法
+                    self.best_move = node
+                alpha = value
+        return alpha
 
 def apply_for_join_game(name_):
     applying = {"type": 0,
@@ -728,14 +656,13 @@ def receive_msg_1(new_mes):
     net_flag = copy.deepcopy(gameside)
 
 
-
 def receive_msg_2(new_mes):
     global flag
     global pre_space, pre_chess, selected, select_chess
     global net_flag
     global expression
-    j,i = new_mes['dst']['x'], new_mes['dst']['y']
-    jj,ii = new_mes['src']['x'], new_mes['src']['y']
+    j, i = new_mes['dst']['x'], new_mes['dst']['y']
+    jj, ii = new_mes['src']['x'], new_mes['src']['y']
     if new_mes["exp"] != "":
         expression = new_mes['exp']
     else:
@@ -753,7 +680,7 @@ def receive_msg_2(new_mes):
 def receive_msg_3(new_mes):
     print("执行stop消息处理")
     global game_end
-    global stop_flag,stop_side
+    global stop_flag, stop_side
     global blue_sum, red_sum
     stop_side = new_mes['side']
     game_end = True
@@ -773,6 +700,7 @@ def receive_msg_3(new_mes):
     stop_flag = 1
     print("执行完毕")
 
+
 def receive_msg_4():
     print("执行quit消息处理")
     global quit_flag
@@ -781,6 +709,7 @@ def receive_msg_4():
     quit_flag = 1
     send_msg_to(clientSocket, msg)
     print("执行完毕")
+
 
 def receive_msg_5(new_mes):
     print("执行over_time消息处理")
@@ -793,6 +722,7 @@ def receive_msg_5(new_mes):
     send_msg_to(clientSocket, msg)
     print("执行完毕")
 
+
 def client_thread(conn, addr):
     global oppName
     while True:
@@ -802,8 +732,8 @@ def client_thread(conn, addr):
         print("收到的初始消息为：", data)
         data = json.loads(data)
         print("解压后消息为：", data)
-        if  oppName=='' and 'counterpart_name' in data:
-            oppName = data[ 'counterpart_name']
+        if oppName == '' and 'counterpart_name' in data:
+            oppName = data['counterpart_name']
         if not 'status'in data:
             receive_msg_2(data)
         elif data['status'] == 1:
@@ -870,8 +800,8 @@ def key_Processing(e):
                     if fflag == 1:
                         break
                 print(x, y, ii, jj)
-                if flag[ii][jj]>9:
-                    send_num =  flag[ii][jj]-10
+                if flag[ii][jj] > 9:
+                    send_num = flag[ii][jj]-10
                 else:
                     send_num = flag[ii][jj]
                 flag[x][y] = copy.deepcopy(flag[ii][jj])
@@ -944,6 +874,24 @@ def key_Processing(e):
             current_string.append('9')
     pre_key = e.scancode
 
+def terminal(flag):
+    blue_score_flag = 0
+    red_score_flag = 0
+    for i in range(0, 4):
+        for j in range(4, 11):
+            if flag[j][i] > 9:
+                red_score_flag += 1
+    for i in range(11, 15):
+        for j in range(4, 11):
+            if flag[j][i] > -1 and flag[j][i] < 10:
+                blue_score_flag += 1
+    # 如果有一方全部棋子都到位
+
+    if red_score_flag == 10 or blue_score_flag == 10:
+        return True
+    else :
+        return False
+
 
 def Calculate_Point_And_Call_Of():
     global flag
@@ -953,32 +901,9 @@ def Calculate_Point_And_Call_Of():
     global gameside
     global clientSocket
     global game_end
-    global blue_sum,red_sum
-    global stop_flag,stop_side
-    '''
-    print('算分叫停测试版')
-    for line in weight:
-        for each in line:
-            if each>10:
-                
-    '''
-    blue_score_flag = 0
-    red_score_flag = 0
-    print('算分叫停')
-    
-    for i in range(0, 4):
-        for j in range(4, 11):
-            if flag[j][i] > 9:
-                red_score_flag += 1
-
-    for i in range(11, 15):
-        for j in range(4, 11):
-            if flag[j][i] > -1 and flag[j][i] < 10:
-                blue_score_flag += 1
-    # 如果有一方全部棋子都到位
-    print(red_score_flag, blue_score_flag)
-    #red_score_flag= blue_score_flag=10#算分测试语句
-    if red_score_flag == 10 or blue_score_flag == 10:
+    global blue_sum, red_sum
+    global stop_flag, stop_side
+    if terminal(flag):
         if mode == 'net':
             ms = {
                 "type": 2,
@@ -990,7 +915,7 @@ def Calculate_Point_And_Call_Of():
             send_msg_to(clientSocket, ms)
         game_end = True
         stop_flag = 1
-        stop_side=gameside
+        stop_side = gameside
         blue_sum = 0
         for i in range(11, 15):
             for j in range(4, 11):
@@ -1036,9 +961,21 @@ if __name__ == '__main__':
 
             elif (role == 'red' and mode == 'ai' and ok == 1):
                 # 模式切换，网络切换过来应该先退出，然后重新初始化
-                ai()
-                last_moment = 1
+                ai.best_move = -1
+                ai.alphaBeta_search(0,-100000,100000,role)
+                chess,space=ai.best_move
+                print(ai.best_move)
+                ans = []
+                chess_x,chess_y=chess
+                space_x,space_y=space
+                removable(chess_pos[space_x][space_y][0]+20, chess_pos[space_x][space_y][1]+20, chess)
+                flag[space_x][space_y] = copy.deepcopy(flag[chess_x][chess_y])
+                flag[chess_x][chess_y] = -1
+                pre_space = copy.deepcopy(space)
+                pre_chess = copy.deepcopy(chess)
                 ok = 0
+                role_change()
+                
 
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
@@ -1062,9 +999,10 @@ if __name__ == '__main__':
                     # t.start()
                     # t.join()
                 elif x in range(ss+dd, ss+dd+xx) and y in range(h, h+yy):
-                    print('人机模式')
+                    print('ai模式')
                     mode = 'ai'
                     role = 'blue'
+                    ai=AI('red',role)
                 elif x in range(ss+dd*2, ss+dd*2+xx) and y in range(h, h+yy):
                     print('悔棋')
                     game_end = False
@@ -1096,7 +1034,7 @@ if __name__ == '__main__':
                     if clicked is not None:
                         print('本次点击点击到了棋子')
                         ans = []
-                        show_exp_flag=0
+                        show_exp_flag = 0
                         last_moment = 0
                         selected = copy.deepcopy(clicked)
                         select_chess = copy.deepcopy(clicked)
@@ -1113,8 +1051,8 @@ if __name__ == '__main__':
                             pre_chess = copy.deepcopy(select_chess)
                             selected = None
                             select_chess = None
-                            if flag[i][j]>9:
-                                send_num =  flag[i][j]-10
+                            if flag[i][j] > 9:
+                                send_num = flag[i][j]-10
                             else:
                                 send_num = flag[i][j]
                             if mode == 'net':
@@ -1143,7 +1081,7 @@ if __name__ == '__main__':
 
             draw()
             pygame.display.flip()  # 更新全部显示
-            if quit_flag==1 or stop_flag==1:
+            if quit_flag == 1 or stop_flag == 1:
                 sys.exit()
                 pygame.quit()
 
