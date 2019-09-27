@@ -50,7 +50,6 @@ role = 'red'
 num = []
 input_flag = 0
 current_string = []
-ok = 0
 blue_sum, red_sum = 0, 0
 last_moment = 0
 pre_space = None
@@ -119,7 +118,6 @@ for i in range(10):
     r.append(pygame.image.load('./image/红棋'+str(i)+'.png'))
 blue_sign = pygame.image.load("./image/蓝棋.png").convert_alpha()
 red_sign = pygame.image.load("./image/红棋.png").convert_alpha()
-ok_sign = pygame.image.load("./image/ok.jpg").convert_alpha()  # 对勾，人机模式
 mode_select_image = pygame.image.load(
     "./image/mode_select.png").convert_alpha()
 repent_image = pygame.image.load("./image/repent.png").convert_alpha()  # 悔棋
@@ -252,8 +250,7 @@ def draw():
         screen.blit(Red_surf, (570, 270))
 
         if role == 'red':
-            screen.blit(ok_sign, (130, 666))
-            pygame.display.set_caption("点击 ‘勾’ ，就到电脑下棋了，玩家您就不能悔棋了哦！")
+            pygame.display.set_caption("玩家下棋中……")
         else:
             pygame.display.set_caption("电脑下棋中……")
     else:
@@ -294,7 +291,7 @@ def draw():
         screen.blit(select_image, (70, 260))
     else:
         screen.blit(select_image, (730, 260))
-    if mode == 'ai' and role==ai.other_man and input_flag==0:
+    if mode == 'ai' and role == ai.other_man and input_flag == 0:
         if ans != []:
             font = pygame.font.SysFont("Segoe Script", 40)
             hh = 555
@@ -303,7 +300,7 @@ def draw():
                     ft2_surf = font.render(each, 1, (65, 105, 225))
                     screen.blit(ft2_surf, (20, hh))
                     hh += 30
-            else :
+            else:
                 for each in ans:
                     ft2_surf = font.render(each, 1, (220, 20, 60))
                     screen.blit(ft2_surf, (690, hh))
@@ -537,12 +534,32 @@ class AI:
         self.act_step = 0
         self.best_move = None
         
+
     # 局面评估函数
     '''
         局面评估函数：红方-极大值，蓝方-极小值
             （30-红方每个棋子到每个蓝方对应位置的距离）*权值
             -（30-蓝方每个棋子到每个红方对应位置的距离）*权值
     '''
+    def expression(expressions):
+        dict = {}
+        for each in expressions:
+            exp=each
+            tmp = each.split('=')
+            num=0
+            for c in each:
+                if c>='0' and c<='9':
+                    num=num*10+int(c)
+                else:
+                    num='%d'%num
+                    if dict.get(num)!=None:
+                        print(exp,num,dict)
+                        exp = exp.replace(num,str('('+dict[num]+')'))
+                    num=0
+                if c=='=':
+                    break
+            dict = {tmp[1]:tmp[0]}
+        return exp
 
     def situation_vl(self):
         global flag
@@ -580,16 +597,17 @@ class AI:
             limit = 10
         else:
             limit = 0
-        nodes=[]
+        nodes = []
         for chess_x in range(15):
             for chess_y in range(15):
                 if flag[chess_x][chess_y] >= limit and flag[chess_x][chess_y] < limit+10:
                     for x in range(15):
                         for y in range(15):
                             if flag[x][y] == -1:
-                                node = removable(chess_pos[x][y][0]+20, chess_pos[x][y][1]+20, (chess_x, chess_y))
-                                if node !=None:
-                                    nodes.append(((chess_x,chess_y),node))
+                                node = removable(
+                                    chess_pos[x][y][0]+20, chess_pos[x][y][1]+20, (chess_x, chess_y))
+                                if node != None:
+                                    nodes.append(((chess_x, chess_y), node))
         return nodes
 
     # 极大极小搜索及Alpha—Beta剪枝函数
@@ -600,26 +618,27 @@ class AI:
             return self.situation_vl()  # 返回局面评估值
         nodes = self.generate_exercise(player)
         if player == 'blue':
-            player = 'red' 
+            player = 'red'
         else:
             player = 'blue'
         for node in nodes:
-            chess,space=node
-            chess_x,chess_y=chess
-            space_x,space_y=space
+            chess, space = node
+            chess_x, chess_y = chess
+            space_x, space_y = space
             flag[space_x][space_y] = copy.deepcopy(flag[chess_x][chess_y])
             flag[chess_x][chess_y] = -1
             value = -self.alphaBeta_search(depth+1, -beta, -alpha, player)
             flag[chess_x][chess_y] = copy.deepcopy(flag[space_x][space_y])
             flag[space_x][space_y] = -1
-            #print(value)
-            if value >= beta:  
+            # print(value)
+            if value >= beta:
                 return beta
             if value > alpha:  # val大于了下界alpha，修改alpha，这是一个PV节点
                 if depth == 0:  # 第0层时，当出现了优于目前的alpha值则记录最佳走法
                     self.best_move = node
                 alpha = value
         return alpha
+
 
 def apply_for_join_game(name_):
     applying = {"type": 0,
@@ -874,6 +893,7 @@ def key_Processing(e):
             current_string.append('9')
     pre_key = e.scancode
 
+
 def terminal(flag):
     blue_score_flag = 0
     red_score_flag = 0
@@ -889,7 +909,7 @@ def terminal(flag):
 
     if red_score_flag == 10 or blue_score_flag == 10:
         return True
-    else :
+    else:
         return False
 
 
@@ -959,31 +979,30 @@ if __name__ == '__main__':
             elif e.type == pygame.KEYDOWN:
                 key_Processing(e)
 
-            elif (role == 'red' and mode == 'ai' and ok == 1):
+            elif (role == 'red' and mode == 'ai'):
                 # 模式切换，网络切换过来应该先退出，然后重新初始化
+                expression=''
                 ai.best_move = -1
-                ai.alphaBeta_search(0,-100000,100000,role)
-                chess,space=ai.best_move
-                print(ai.best_move)
+                ai.alphaBeta_search(0, -100000, 100000, role)
+                chess, space = ai.best_move
                 ans = []
-                chess_x,chess_y=chess
-                space_x,space_y=space
-                removable(chess_pos[space_x][space_y][0]+20, chess_pos[space_x][space_y][1]+20, chess)
+                chess_x, chess_y = chess
+                space_x, space_y = space
+                removable(chess_pos[space_x][space_y][0]+20,
+                          chess_pos[space_x][space_y][1]+20, chess)
+                print('ans',ans)
+                expression = ai.expression(ans)
                 flag[space_x][space_y] = copy.deepcopy(flag[chess_x][chess_y])
                 flag[chess_x][chess_y] = -1
                 pre_space = copy.deepcopy(space)
                 pre_chess = copy.deepcopy(chess)
-                ok = 0
                 role_change()
-                
 
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
                 print(x, y)
-                if mode == 'ai' and x in range(130, 200) and y in range(666, 720):
-                    # AI模式中勾选确认式子输入完毕
-                    ok = 1
-                elif x in range(ss+dd//2, ss+dd//2+xx) and y in range(h-20, h-20+yy):
+        
+                if x in range(ss+dd//2, ss+dd//2+xx) and y in range(h-20, h-20+yy):
                     print('P2P模式')
                     mode = 'p2p'
                 elif x in range(ss, ss+xx) and y in range(h+3, h+3+yy):
@@ -1002,7 +1021,7 @@ if __name__ == '__main__':
                     print('ai模式')
                     mode = 'ai'
                     role = 'blue'
-                    ai=AI('red',role)
+                    ai = AI('red', role)
                 elif x in range(ss+dd*2, ss+dd*2+xx) and y in range(h, h+yy):
                     print('悔棋')
                     game_end = False
