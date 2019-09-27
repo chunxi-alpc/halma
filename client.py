@@ -541,7 +541,9 @@ class AI:
             （30-红方每个棋子到每个蓝方对应位置的距离）*权值
             -（30-蓝方每个棋子到每个红方对应位置的距离）*权值
     '''
-    def expression(expressions):
+    def expression(self,expressions):
+        if expressions == []:
+            return ''
         dict = {}
         for each in expressions:
             exp=each
@@ -990,7 +992,7 @@ if __name__ == '__main__':
                 space_x, space_y = space
                 removable(chess_pos[space_x][space_y][0]+20,
                           chess_pos[space_x][space_y][1]+20, chess)
-                print('ans',ans)
+                print(ans)
                 expression = ai.expression(ans)
                 flag[space_x][space_y] = copy.deepcopy(flag[chess_x][chess_y])
                 flag[chess_x][chess_y] = -1
