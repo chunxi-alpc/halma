@@ -294,7 +294,7 @@ def draw():
         screen.blit(select_image, (70, 260))
     else:
         screen.blit(select_image, (730, 260))
-    if mode == 'ai' and role==ai.other_man:
+    if mode == 'ai' and role==ai.other_man and input_flag==0:
         if ans != []:
             font = pygame.font.SysFont("Segoe Script", 40)
             hh = 555
@@ -559,7 +559,7 @@ class AI:
                         for y in range(0, 4):
                             if weight[x][y] > 0:
                                 v += weight[x][y]*(30-abs(i-x)-abs(j-y))
-                    sit_value += (v*chess_v)
+                    sit_value -= (v*chess_v)
                 elif flag[i][j] >= 0:
                     chess_v = flag[i][j]
                     if chess_v == 0:
@@ -569,7 +569,7 @@ class AI:
                         for y in range(11, 15):
                             if weight[x][y] > 0:
                                 v += (weight[x][y]-10)*(30-abs(i-x)-abs(j-y))
-                    sit_value -= (v*chess_v)
+                    sit_value += (v*chess_v)
         return sit_value
     # 生成player方所有走法,return ()
 
